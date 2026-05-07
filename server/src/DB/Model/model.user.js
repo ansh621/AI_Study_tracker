@@ -1,32 +1,35 @@
 const mongoose = require('mongoose');
 
 const UserSchema = new mongoose.Schema({
-  // Basic Credentials (shared by both)
+  // Basic Credentials
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
+  phoneNumber: { type: String, required: function() { return this.role === 'parent'; }, unique: true }, // Required for the linking bridge
   
-  // Role Differentiation
   role: { 
     type: String, 
     enum: ['student', 'parent'], 
     required: true 
   },
 
-  // The "Bridge"
-  // If Parent: this stores the Student's ID
-  // If Student: this stores the Parent's ID
-  linkedUser: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User' 
+  // THE LINKING BRIDGE
+  // Students fill this with their parent's number.
+  // Parents don't need to fill this; they just "own" the phone number students reference.
+  parentPhoneNumber: { 
+    type: String, 
+    required: function() { return this.role === 'student'; },
+    index: true // Indexed for fast lookups when the parent logs in
   },
 
-  // Student-Specific Fields (ignored if role is 'parent')
+  // STUDENT-SPECIFIC FIELDS
+  // Gamification & Monitoring
   streak: { type: Number, default: 0 },
   points: { type: Number, default: 0 },
-  offTaskCount: { type: Number, default: 0 }, // For tab-switch monitoring
+  lastActive: { type: Date, default: Date.now }, // Critical for Streak logic
+  offTaskCount: { type: Number, default: 0 }, 
   
-  // Parent-Specific Fields (ignored if role is 'student')
+  // PARENT-SPECIFIC FIELDS
   notificationsEnabled: { type: Boolean, default: true }
 
 }, { timestamps: true });
