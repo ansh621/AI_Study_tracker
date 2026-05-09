@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import SubjectSelection from "./SubjectSelection";
 
 const Onboarding = () => {
   const navigate = useNavigate();
@@ -11,37 +12,39 @@ const Onboarding = () => {
   const [gender, setGender] = useState("Male");
 
   const handleContinue = async () => {
-    const onboardingData = {grade, board, age, gender }; // Replace "user123" with actual user ID
+  // Validate data before sending (Basic check)
+  if (!grade || !board || !age || !gender) {
+    return alert("Please fill in all details before continuing.");
+  }
 
-    try{
-      const response = await fetch("http://localhost:3000/api/auth/Onboarding", {
-       method:"POST",
-       headers: {
+  const onboardingData = { grade, board, age, gender };
+
+  try {
+    const response = await fetch("http://localhost:3000/api/student/onboarding", {
+      method: "POST",
+      headers: {
         "Content-Type": "application/json",
       },
-      credentials: "include",
-      body: JSON.stringify(onboardingData) 
-    })
+      credentials: "include", // Essential for sending the Token cookie
+      body: JSON.stringify(onboardingData)
+    });
 
     const data = await response.json();
-    if(response.ok){
-      alert("Your information has been saved successfully!");
+
+    if (response.ok) {
+      // Pro-tip: Alerts are annoying for UX. Use a toast or just navigate.
+      navigate("/SubjectSelection", { 
+        state: { onboardingData }, 
+        replace: true // Prevents the user from going "back" to a half-filled form
+      });
     } else {
-      alert(data.message || "Failed to save your information. Please try again.");
-      return;
-
+      alert(data.message || "Failed to save. Please try again.");
     }
+  } catch (error) {
+    console.error("Network error:", error);
+    alert("Connection lost. Check your server.");
   }
-    catch(error){
-      console.log("Onboarding Error:", error);
-      alert("Failed to save your information. Please try again.");
-      return;
-    }
-
-    console.log("Onboarding Data:", onboardingData);
-    // Logic to save to backend or move to dashboard
-    navigate("/dashboard");
-  };
+};;
 
   return (
     <div className="bg-[#f8f9fc] text-[#2d3338] min-h-screen selection:bg-[#ae9ffb]/30 font-['Plus_Jakarta_Sans']">

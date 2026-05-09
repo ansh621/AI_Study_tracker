@@ -4,6 +4,7 @@ import Signup from './pages/Signup';
 import Dashboard from './pages/student/dashboard';
 import Onboarding from './pages/student/Onboarding';
 import ParentDash from './pages/parent/ParentDash';
+import SubjectSelection from './pages/student/SubjectSelection';
 function App(){
   return (
     <Router>
@@ -14,6 +15,7 @@ function App(){
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/Onboarding" element={<Onboarding />} />
         <Route path="/parentDash" element={<ParentDash />} />
+        <Route path="/SubjectSelection" element={<SubjectSelection />} />
         
         <Route path="/" element={<Login />} />
       </Routes>

@@ -24,9 +24,14 @@ const UserSchema = new mongoose.Schema({
 
   // STUDENT-SPECIFIC FIELDS
   // Gamification & Monitoring
-  streak: { type: Number, default: 0 },
+  // Inside your Student/User Schema
+streak: {
+    count: { type: Number, default: 0 },
+    lastActive: { type: Date, default: Date.now },
+    longestStreak: { type: Number, default: 0 }
+},
   points: { type: Number, default: 0 },
-  lastActive: { type: Date, default: Date.now }, // Critical for Streak logic
+
   offTaskCount: { type: Number, default: 0 }, 
   
   // PARENT-SPECIFIC FIELDS

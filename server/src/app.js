@@ -14,8 +14,11 @@ app.use(cookieParser()); // For parsing cookies
 
 
 const authRoutes = require('./routes/auth.routes');
+const aiRoutes = require('./routes/ai.routes')
+const studentRoutes = require('./routes/student.routes');
 app.use('/api/auth', authRoutes);
-
+app.use('/api/student', studentRoutes);
+app.use('/api/AI', aiRoutes)
 // Connect to the database
 connectDB().catch(err => {
     console.error("Failed to connect to the database:", err);
