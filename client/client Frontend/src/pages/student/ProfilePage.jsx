@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import NavBar from '../../components/NavBar';
 import { 
   ArrowLeft, 
   Settings, 
@@ -87,25 +88,29 @@ const fetchProfile = async () => {
           </div>
           <School size={120} className="absolute -right-4 -bottom-4 opacity-5" />
         </section>
+        <section className="bg-gray-100/50 p-8 rounded-2xl flex items-center justify-between relative overflow-hidden">
+          <div className="z-10">
+            <p className="text-xs font-bold text-indigo-600 tracking-widest uppercase mb-1">Personal Identity</p>
+            <h3 className="text-2xl font-bold">Age {profile?.age}</h3>
+            <p className="text-gray-500">{profile?.board} Board</p>
+          </div>
+          <User size={120} className="absolute -right-4 -bottom-4 opacity-5" />
+        </section>
+        <section className="bg-gray-100/50 p-8 rounded-2xl flex items-center justify-between relative overflow-hidden">
+          <div className="z-10">
+            <p className="text-xs font-bold text-indigo-600 tracking-widest uppercase mb-1">Subjects</p>
+            <h3 className="text-2xl font-bold">{profile?.subjects.length} Subjects</h3>
+            <p className="text-gray-500">{profile?.subjects.join(", ")}</p>
+          </div>
+          <BookOpen size={120} className="absolute -right-4 -bottom-4 opacity-5" />
+        </section>
         
         {/* Rest of your UI components go here using userData... */}
       </main>
 
-      <nav className="fixed bottom-0 left-0 w-full px-4 pb-6 pt-3 bg-white border-t flex justify-around items-center">
-        <NavItem icon={<BookOpen size={24} />} label="Learn" />
-        <NavItem icon={<BarChart3 size={24} />} label="Insights" />
-        <NavItem icon={<Users size={24} />} label="Social" />
-        <NavItem icon={<User size={24} />} label="Profile" active />
-      </nav>
     </div>
   );
 };
 
-const NavItem = ({ icon, label, active = false }) => (
-  <button className={`flex flex-col items-center px-5 py-2 ${active ? 'text-[#6152a8]' : 'text-gray-400'}`}>
-    {icon}
-    <span className="text-[11px] font-medium mt-1">{label}</span>
-  </button>
-);
 
 export default ProfilePage;
