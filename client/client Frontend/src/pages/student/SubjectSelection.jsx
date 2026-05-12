@@ -70,12 +70,14 @@ const SubjectSelection = (  ) => {
       });
 
       if (response.ok) {
-        const resp = await fetch("http://localhost:3000/api/AI/generate-syllabus", {
+        const resp = await fetch("http://localhost:3000/api/ai/generate-syllabus", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({
-            subjectName: selectedSubjects[0] // Generate syllabus for the first selected subject
+            subjectName: selectedSubjects[0], // Generate syllabus for the first selected subject
+            grade: onboardingData.grade,
+            board: onboardingData.board
           })
         });
 
@@ -84,8 +86,10 @@ const SubjectSelection = (  ) => {
         }
         else{
           alert("Syllabus generated successfully");
+          
         }
         navigate("/dashboard")
+        
       }
     } catch (error) {
       console.error("Submission failed", error);
@@ -96,13 +100,13 @@ const SubjectSelection = (  ) => {
     <div className="bg-[#f8f9fc] text-[#2d3338] min-h-screen flex flex-col font-['Plus_Jakarta_Sans']">
       <main className="flex-1 w-full max-w-2xl mx-auto px-6 pt-10 pb-32">
         
-        {/* Header Section */}
+       
         <div className="mb-10">
           <h2 className="text-3xl font-extrabold tracking-tight">Set up your Academy</h2>
           <p className="text-[#5a6065] mt-2">Class {onboardingData.grade} • {onboardingData.board} Board</p>
         </div>
 
-        {/* Stream Selection (Only for 11-12) */}
+        
         {isSenior && (
           <section className="mb-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <h3 className="text-sm font-bold uppercase tracking-widest text-[#6152a8] mb-4">Select Stream</h3>

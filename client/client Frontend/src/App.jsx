@@ -5,6 +5,7 @@ import Dashboard from './pages/student/dashboard';
 import Onboarding from './pages/student/Onboarding';
 import ParentDash from './pages/parent/ParentDash';
 import SubjectSelection from './pages/student/SubjectSelection';
+import ProfilePage from './pages/student/ProfilePage';
 function App(){
   return (
     <Router>
@@ -16,7 +17,7 @@ function App(){
         <Route path="/Onboarding" element={<Onboarding />} />
         <Route path="/parentDash" element={<ParentDash />} />
         <Route path="/SubjectSelection" element={<SubjectSelection />} />
-        
+        <Route path="/ProfilePage" element={<ProfilePage />} />
         <Route path="/" element={<Login />} />
       </Routes>
     </Router>

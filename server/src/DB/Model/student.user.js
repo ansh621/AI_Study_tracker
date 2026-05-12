@@ -13,6 +13,9 @@ const studentSchema =new mongoose.Schema({
     subjects: {
     type: [String],
     default: []
+  },timeSpent: {
+    type: Number,
+    default: 1
   }
 
 })

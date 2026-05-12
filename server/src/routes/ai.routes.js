@@ -8,6 +8,6 @@ const { protect } = require('../middleware/auth.protect');
 const updateStreak = require('../middleware/activity.streak');
 
 // Update the handler name here as well
-router.post('/generate-syllabus', protect,feedStudentSyllabus);
+router.post('/generate-syllabus', protect, feedStudentSyllabus);
 
 module.exports = router;

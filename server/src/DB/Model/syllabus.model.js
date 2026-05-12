@@ -2,6 +2,11 @@
 const mongoose = require('mongoose');
 
 const SyllabusSchema = new mongoose.Schema({
+  userId: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: 'User',
+      required: true 
+    },
   // This field differentiates the subjects
   subjectName: { type: String, required: true }, 
 
