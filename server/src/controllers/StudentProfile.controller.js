@@ -13,7 +13,7 @@ async function getStudentProfile(req, res) {
         // 1. Fetch both documents in parallel to save time
         const [studentProfile, userBaseInfo] = await Promise.all([
             studentModel.findOne({ userId }).select('age grade stream board gender subjects timeSpent'),
-            userModel.findById(userId).select('name age streak')
+            userModel.findById(userId).select('name streak')
         ]);
 
         // 2. Critical Check: Does the base user even exist?
@@ -38,7 +38,8 @@ async function getStudentProfile(req, res) {
                 age,
                 streak
             }
-        });
+        })
+        
 
     } catch (error) {
         console.error("Error fetching student profile:", error);

@@ -7,7 +7,7 @@ const studentSchema =new mongoose.Schema({
   },
     grade:{type : String , required: true},
     board:{type : String , required: true},
-    age:{type:String , required : true},
+    age:{type:Number, required : true},
     gender:{type:String, required:true},
     stream:{type:String, default:"General"},
     subjects: {
