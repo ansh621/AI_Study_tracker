@@ -213,7 +213,7 @@ Generate detailed topics for this chapter.
 
 Subject: ${syllabus.subjectName}
 Chapter: ${chapter.chapterTitle}
-Class Level: ${syllabus.classLevel}
+Grade: ${syllabus.grade}
 Board: ${syllabus.board}
 
 Return ONLY valid JSON in this format:
