@@ -1,10 +1,11 @@
 const express = require('express');
 const app = express();
 const cookieParser = require('cookie-parser');
+
 const connectDB = require('./DB/connectivity');const cors = require("cors");
 app.use(cors({
-    origin: "http://localhost:5173", 
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    origin: ["http://localhost:5173", "http://127.0.0.1:5173"], 
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     credentials: true, // Allow cookies to be sent
 }));
 
@@ -16,9 +17,11 @@ app.use(cookieParser()); // For parsing cookies
 const authRoutes = require('./routes/auth.routes');
 const aiRoutes = require('./routes/ai.routes')
 const studentRoutes = require('./routes/student.routes');
+const dashboardRoutes = require('./routes/dashboard.routes');
 app.use('/api/auth', authRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/ai', aiRoutes)
+app.use('/api/dashboard', dashboardRoutes);
 // Connect to the database
 connectDB().catch(err => {
     console.error("Failed to connect to the database:", err);

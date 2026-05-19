@@ -9,7 +9,7 @@ async function studentData(req, res) {
     const studentdata = await studentModel.findOneAndUpdate(
       { userId },
       { age, grade, board, gender },
-      { new: true, upsert: true }
+      { returnDocument: "after", upsert: true }
     );
 
     res.status(201).json({ message: "Info saved", data: studentdata });

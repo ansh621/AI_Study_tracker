@@ -27,8 +27,8 @@ const UserSchema = new mongoose.Schema({
   // Inside your Student/User Schema
 streak: {
     count: { type: Number, default: 0 },
-    
-    longestStreak: { type: Number, default: 0 }
+    longestStreak: { type: Number, default: 0 },
+    lastActive: { type: Date, default: null }
 },
   points: { type: Number, default: 0 },
   // Critical for Streak logic

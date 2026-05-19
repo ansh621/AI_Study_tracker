@@ -75,7 +75,7 @@ const SubjectSelection = (  ) => {
           headers: { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({
-            subjects: selectedSubjects[0], // Generate syllabus for the first selected subject
+            subjects: selectedSubjects, // Generate syllabus for the first selected subject
             grade: onboardingData.grade,
             board: onboardingData.board
           })

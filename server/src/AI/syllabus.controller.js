@@ -18,7 +18,7 @@ async function generateInitialSyllabus(req, res) {
 
     try {
 
-        const { subjects, classLevel, board } = req.body;
+        const { subjects, grade, board } = req.body;
 
         const userId = req.user.id;
 
@@ -30,9 +30,24 @@ async function generateInitialSyllabus(req, res) {
                 message: "Subjects array is required"
             });
         }
+        try{
+            const model = genAI.getGenerativeModel({
+            model: "gemini-3.1-flash-lite",
+            generationConfig: {
+                responseMimeType: "application/json"
+            }
+        });
+        }catch{
+            const model = genAI.getGenerativeModel({
+            model: "gemini-2.5-flash",
+            generationConfig: {
+                responseMimeType: "application/json"
+            }
+        });
+        }
 
         const model = genAI.getGenerativeModel({
-            model: "gemini-2.5-flash",
+            model: "gemini-3.1-flash-lite",
             generationConfig: {
                 responseMimeType: "application/json"
             }
@@ -47,7 +62,7 @@ Generate chapter lists for these subjects.
 Subjects:
 ${formattedSubjects}
 
-Class Level: ${classLevel}
+Grade: ${grade}
 Board: ${board}
 
 Return ONLY valid JSON in this exact format:
@@ -125,7 +140,7 @@ Rules:
 
                 subjectName: subject.subjectName,
 
-                classLevel,
+                grade,
 
                 board,
 

@@ -46,6 +46,7 @@ async function registerUser(req, res) {
 
     res.status(201).json({
       message: "User created successfully",
+      token,
       role: newUser.role, // Send role so React knows which dashboard to load
     });
     console.log("Register endpoint hit with data:", req.body);
@@ -87,6 +88,7 @@ async function loginUser(req, res) {
 
     res.status(200).json({
       message: "Login successful from backend",
+      token,
       role: user.role,
     });
   } catch (error) {
@@ -95,5 +97,15 @@ async function loginUser(req, res) {
   }
 }
 
+function logoutUser(req, res) {
+  res.clearCookie("Token", {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax",
+  });
+
+  res.status(200).json({ message: "Logout successful" });
+}
+
 // Don't forget to export it!
-module.exports = { registerUser, loginUser };
+module.exports = { registerUser, loginUser, logoutUser };
