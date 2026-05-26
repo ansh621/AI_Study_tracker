@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { BookOpen, BarChart3, Users, User, HomeIcon } from 'lucide-react';
+import { BarChart3, Bot, User, HomeIcon } from 'lucide-react';
 
 const NavItem = ({ to, icon: Icon, label }) => (
   <NavLink
@@ -20,7 +20,7 @@ function NavBar() {
   return (
     <nav className="fixed bottom-0 left-0 w-full px-4 pb-6 pt-3 bg-white border-t border-gray-100 flex justify-around items-center z-50">
       <NavItem to="/Dashboard" icon={HomeIcon} label="Dashboard" />
-      <NavItem to="/learn" icon={BookOpen} label="Learn" />
+      <NavItem to="/focus-setup" icon={Bot} label="AI Tutor" />
       <NavItem to="/insights" icon={BarChart3} label="Insights" />
       <NavItem to="/ProfilePage" icon={User} label="Profile" />
     </nav>

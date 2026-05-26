@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import ParentDash from "./parent/ParentDash";
+import Onboarding from "./student/Onboarding";
+import Dashboard from "./student/Dashboard";
 
 // --- Sub-components (Updated to handle props) ---
 
@@ -86,7 +89,7 @@ const Signup = () => {
       if (response.ok && role === "parent") {
         alert("Account created successfully!");
         alert(`Welcome, ${data.name}! Your parent account has been created.`);
-        navigate("/dashboard"); // Redirect to dashboard page
+        navigate("/ParentDash"); // Redirect to dashboard page
       } else {
         alert(data.message || "Registration failed.");
       }
@@ -111,7 +114,7 @@ const Signup = () => {
                 <span className="material-symbols-outlined">auto_stories</span>
               </div>
               <span className="text-xl font-bold tracking-tighter text-[#6152a8]">
-                Serene Academy
+                Focus Nest
               </span>
             </div>
             <h1 className="text-5xl font-bold leading-tight tracking-tight mb-6">
@@ -184,7 +187,7 @@ const Signup = () => {
                   label="Email Address"
                   name="email"
                   type="email"
-                  placeholder="alice@serene.edu.in"
+                  placeholder="alice@focusnest.app"
                   value={formData.email}
                   onChange={handleChange}
                 />

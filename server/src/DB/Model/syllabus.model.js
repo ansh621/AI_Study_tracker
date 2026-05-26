@@ -69,6 +69,8 @@ const SyllabusSchema = new mongoose.Schema({
 
   classLevel: String,
 
+  grade: String,
+
   board: String,
 
   chapters: [ChapterSchema]

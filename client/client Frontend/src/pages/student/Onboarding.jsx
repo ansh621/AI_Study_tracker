@@ -17,7 +17,12 @@ const Onboarding = () => {
     return alert("Please fill in all details before continuing.");
   }
 
-  const onboardingData = { grade, board, age, gender };
+  const parsedAge = Number(age);
+  if (!Number.isFinite(parsedAge) || parsedAge < 3 || parsedAge > 100) {
+    return alert("Please enter a valid age.");
+  }
+
+  const onboardingData = { grade, board, age: parsedAge, gender };
 
   try {
     const response = await fetch("http://localhost:3000/api/student/onboarding", {

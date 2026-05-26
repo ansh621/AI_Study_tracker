@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { studentData, StudentSubjects } = require('../controllers/studentData.controller');
-const { getStudentProfile } = require('../controllers/StudentProfile.controller');
+const { getStudentProfile, updateStudentProfile } = require('../controllers/StudentProfile.controller');
 const User = require('../DB/Model/model.user');
 
 const { protect } = require('../middleware/auth.protect');
@@ -18,5 +18,6 @@ router.get("/me", protect, async (req, res) => {
   res.status(200).json({ data: user });
 });
 router.get("/profile",protect, getStudentProfile);
+router.put("/profile", protect, updateStudentProfile);
 
 module.exports = router;

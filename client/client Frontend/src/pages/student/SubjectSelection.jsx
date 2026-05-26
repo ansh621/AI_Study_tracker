@@ -102,7 +102,7 @@ const SubjectSelection = (  ) => {
         
        
         <div className="mb-10">
-          <h2 className="text-3xl font-extrabold tracking-tight">Set up your Academy</h2>
+          <h2 className="text-3xl font-extrabold tracking-tight">Set up Focus Nest</h2>
           <p className="text-[#5a6065] mt-2">Class {onboardingData.grade} • {onboardingData.board} Board</p>
         </div>
 

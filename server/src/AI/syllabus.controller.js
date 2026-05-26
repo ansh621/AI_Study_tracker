@@ -3,6 +3,31 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
+function cleanJson(text) {
+    return String(text || "").replace(/```json/gi, "").replace(/```/g, "").trim();
+}
+
+async function generateJsonWithFallback(prompt) {
+    const modelChain = ["gemini-3.1-flash-lite", "gemini-2.5-flash"];
+    let lastError;
+
+    for (const modelName of modelChain) {
+        try {
+            const model = genAI.getGenerativeModel({
+                model: modelName,
+                generationConfig: { responseMimeType: "application/json" }
+            });
+            const result = await model.generateContent(prompt);
+            return JSON.parse(cleanJson(result?.response?.text()));
+        } catch (error) {
+            lastError = error;
+            console.error(`Syllabus AI failed on ${modelName}:`, error.message);
+        }
+    }
+
+    throw lastError;
+}
+
 /*
 |--------------------------------------------------------------------------
 | GENERATE SUBJECTS DURING SIGNUP
@@ -30,29 +55,6 @@ async function generateInitialSyllabus(req, res) {
                 message: "Subjects array is required"
             });
         }
-        try{
-            const model = genAI.getGenerativeModel({
-            model: "gemini-3.1-flash-lite",
-            generationConfig: {
-                responseMimeType: "application/json"
-            }
-        });
-        }catch{
-            const model = genAI.getGenerativeModel({
-            model: "gemini-2.5-flash",
-            generationConfig: {
-                responseMimeType: "application/json"
-            }
-        });
-        }
-
-        const model = genAI.getGenerativeModel({
-            model: "gemini-3.1-flash-lite",
-            generationConfig: {
-                responseMimeType: "application/json"
-            }
-        });
-
         // Create subject list for prompt
         const formattedSubjects = subjects.map(sub => `- ${sub}`).join("\n");
 
@@ -87,27 +89,7 @@ Rules:
 - Keep chapter names concise
 `;
 
-        const result = await model.generateContent(prompt);
-
-        const response = await result.response;
-
-        const text = response.text();
-
-        let parsedData;
-
-        try {
-
-            parsedData = JSON.parse(text);
-
-        } catch (error) {
-
-            console.error("JSON Parse Error:", error);
-
-            return res.status(500).json({
-                success: false,
-                message: "AI returned invalid JSON"
-            });
-        }
+        const parsedData = await generateJsonWithFallback(prompt);
 
         const savedSubjects = [];
 
@@ -216,13 +198,6 @@ async function expandChapterTopics(req, res) {
             });
         }
 
-        const model = genAI.getGenerativeModel({
-            model: "gemini-2.5-flash",
-            generationConfig: {
-                responseMimeType: "application/json"
-            }
-        });
-
         const prompt = `
 Generate detailed topics for this chapter.
 
@@ -247,23 +222,11 @@ Rules:
 - Keep names concise
 `;
 
-        const result = await model.generateContent(prompt);
-
-        const response = await result.response;
-
-        const text = response.text();
-
-        let parsedData;
-
-        try {
-
-            parsedData = JSON.parse(text);
-
-        } catch (error) {
-
-            return res.status(500).json({
+        const parsedData = await generateJsonWithFallback(prompt);
+        if (!Array.isArray(parsedData?.topics) || parsedData.topics.length === 0) {
+            return res.status(502).json({
                 success: false,
-                message: "AI returned invalid JSON"
+                message: "AI returned no topics"
             });
         }
 
@@ -359,13 +322,6 @@ async function expandTopicSubtopics(req, res) {
             });
         }
 
-        const model = genAI.getGenerativeModel({
-            model: "gemini-2.5-flash",
-            generationConfig: {
-                responseMimeType: "application/json"
-            }
-        });
-
         const prompt = `
 Generate detailed subtopics for this topic.
 
@@ -388,23 +344,11 @@ Rules:
 - No explanations
 `;
 
-        const result = await model.generateContent(prompt);
-
-        const response = await result.response;
-
-        const text = response.text();
-
-        let parsedData;
-
-        try {
-
-            parsedData = JSON.parse(text);
-
-        } catch (error) {
-
-            return res.status(500).json({
+        const parsedData = await generateJsonWithFallback(prompt);
+        if (!Array.isArray(parsedData?.subtopics) || parsedData.subtopics.length === 0) {
+            return res.status(502).json({
                 success: false,
-                message: "AI returned invalid JSON"
+                message: "AI returned no subtopics"
             });
         }
 

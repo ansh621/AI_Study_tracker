@@ -5,9 +5,9 @@ import {
   Brain,
   Check,
   MoreVertical,
-  Bell,
   Plus,
-  LogOut
+  LogOut,
+  Settings
 } from "lucide-react";
 
 import { motion}  from "framer-motion";
@@ -17,6 +17,9 @@ import NavBar from "../../components/NavBar";
 
 const API_BASE_URL = "http://localhost:3000/api/dashboard";
 const AUTH_API_BASE_URL = "http://localhost:3000/api/auth";
+const STUDENT_API_BASE_URL = "http://localhost:3000/api/student";
+const FEMALE_DP_URL = "https://i.pinimg.com/1200x/52/ab/65/52ab657ec99f64c416b026a3bc8dc7df.jpg";
+const MALE_DP_URL = "https://i.pinimg.com/1200x/62/6d/72/626d72baaf98ece97098fbdcef8ece2b.jpg";
 
 const emptyStats = {
   completedTasks: 0,
@@ -56,6 +59,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   const [name, setName] = useState("");
+  const [profile, setProfile] = useState(null);
 
   const [tasks, setTasks] = useState([]);
 
@@ -87,7 +91,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const [statusResponse, studentResponse] = await Promise.all([
+        const [statusResponse, studentResponse, profileResponse] = await Promise.all([
           fetch(`${API_BASE_URL}/daily-status`, {
             headers: getAuthHeaders(),
             credentials: "include"
@@ -95,11 +99,16 @@ const Dashboard = () => {
           fetch(`${API_BASE_URL}/student-info`, {
             headers: getAuthHeaders(),
             credentials: "include"
+          }),
+          fetch(`${STUDENT_API_BASE_URL}/profile`, {
+            headers: getAuthHeaders(),
+            credentials: "include"
           })
         ]);
 
         const statusData = await statusResponse.json();
         const studentData = await studentResponse.json();
+        const profileData = await profileResponse.json();
 
         if (!statusResponse.ok) {
           throw new Error(statusData.message || "Unable to load dashboard status");
@@ -110,8 +119,10 @@ const Dashboard = () => {
         }
 
         const todayTasks = statusData.tasks || [];
+        const loadedProfile = profileResponse.ok ? profileData.data : null;
 
-        setName(studentData.data?.name || "Student");
+        setName(loadedProfile?.name || studentData.data?.name || "Student");
+        setProfile(loadedProfile);
         setHasSubmittedToday(Boolean(statusData.hasSubmittedToday));
         setTasks(todayTasks);
         setStreak(normalizeStreak(statusData.streak));
@@ -273,7 +284,7 @@ const Dashboard = () => {
           <div className="w-10 h-10 rounded-full bg-[#ae9ffb] overflow-hidden">
 
             <img
-              src="https://api.dicebear.com/7.x/avataaars/svg?seed=Ansh"
+              src={profile?.gender?.toLowerCase() === "female" ? FEMALE_DP_URL : MALE_DP_URL}
               alt="Avatar"
             />
 
@@ -286,8 +297,12 @@ const Dashboard = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="p-2 hover:bg-gray-100 rounded-full text-gray-500">
-            <Bell size={20} />
+          <button
+            onClick={() => navigate("/ProfilePage")}
+            className="p-2 hover:bg-gray-100 rounded-full text-gray-500"
+            aria-label="Open profile settings"
+          >
+            <Settings size={20} />
           </button>
 
           <button
@@ -325,8 +340,17 @@ const Dashboard = () => {
               Small focused sessions every day build unstoppable momentum.
             </p>
 
-            <button className="bg-white text-[#6152a8] px-8 py-3 rounded-full font-bold text-sm hover:scale-105 transition-transform">
-              Resume Session
+            <button
+              onClick={() => navigate("/focus-setup")}
+              className="bg-white text-[#6152a8] px-8 py-3 rounded-full font-bold text-sm hover:scale-105 transition-transform"
+            >
+              Start Focus Session
+            </button>
+            <button
+              onClick={() => navigate("/quiz-setup")}
+              className="ml-3 bg-[#1f2937] text-white px-8 py-3 rounded-full font-bold text-sm hover:scale-105 transition-transform"
+            >
+              Generate Quiz
             </button>
 
           </div>
@@ -494,7 +518,11 @@ const Dashboard = () => {
 
       {/* FAB */}
 
-      <button className="fixed bottom-28 right-6 w-14 h-14 bg-[#6152a8] text-white rounded-2xl shadow-xl flex items-center justify-center hover:scale-110 transition-all z-40">
+      <button
+        onClick={() => navigate("/focus-setup")}
+        className="fixed bottom-28 right-6 w-14 h-14 bg-[#6152a8] text-white rounded-2xl shadow-xl flex items-center justify-center hover:scale-110 transition-all z-40"
+        aria-label="Start focus session"
+      >
 
         <Plus size={28} />
 
@@ -625,11 +653,9 @@ const TaskGenerationSkeleton = () => (
   </section>
 );
 
-/*
-|--------------------------------------------------------------------------
-| TASK ITEM
-|--------------------------------------------------------------------------
-*/
+
+//TASK ITEM
+
 
 const TaskItem = ({ task, onToggle }) => (
 

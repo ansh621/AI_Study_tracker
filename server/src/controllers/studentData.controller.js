@@ -5,10 +5,15 @@ async function studentData(req, res) {
     // req.user.id was placed here by the 'protect' middleware
     const userId = req.user.id; 
     const { age, grade, board, gender } = req.body;
+    const parsedAge = Number(age);
+
+    if (!Number.isFinite(parsedAge) || parsedAge < 3 || parsedAge > 100) {
+      return res.status(400).json({ message: "Please provide a valid age" });
+    }
 
     const studentdata = await studentModel.findOneAndUpdate(
       { userId },
-      { age, grade, board, gender },
+      { age: parsedAge, grade, board, gender },
       { returnDocument: "after", upsert: true }
     );
 

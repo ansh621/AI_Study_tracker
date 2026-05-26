@@ -68,7 +68,7 @@ const Login = () => {
           <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-[#6152a8] to-[#ae9ffb] rounded-lg md:rounded-xl flex items-center justify-center text-white">
             <span className="material-symbols-outlined text-xl">auto_stories</span>
           </div>
-          <span className="text-lg md:text-xl font-bold tracking-tighter text-[#6152a8]">Serene</span>
+          <span className="text-lg md:text-xl font-bold tracking-tighter text-[#6152a8]">Focus Nest</span>
         </div>
         <Link to="/signup" className="text-[#6152a8] text-sm font-bold md:bg-[#e4e9ee] md:px-6 md:py-2.5 md:rounded-full">
           Sign Up
