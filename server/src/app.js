@@ -22,6 +22,7 @@ const focusSessionRoutes = require('./routes/focusSession.routes');
 const parentRoutes = require('./routes/parent.routes');
 const quizRoutes = require("./routes/quiz.routes");
 const insightRoutes = require("./routes/insight.routes");
+const notificationRoutes = require("./routes/notification.routes");
 
 app.use('/api/parent', parentRoutes);
 app.use('/api/auth', authRoutes);
@@ -31,6 +32,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/focus', focusSessionRoutes);
 app.use("/api/quiz", quizRoutes);
 app.use("/api/insights", insightRoutes);
+app.use("/api/notifications", notificationRoutes);
 // Connect to the database
 connectDB().catch(err => {
     console.error("Failed to connect to the database:", err);

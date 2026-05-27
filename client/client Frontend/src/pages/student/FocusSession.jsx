@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 const FOCUS_API_BASE_URL = "http://localhost:3000/api/focus";
+const QUIZ_API_BASE_URL = "http://localhost:3000/api/quiz";
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("Token");
@@ -42,6 +43,8 @@ const FocusSession = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [input, setInput] = useState("");
   const [isAsking, setIsAsking] = useState(false);
+  const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const [error, setError] = useState("");
   const [summaryData, setSummaryData] = useState(null);
   const hasEndedRef = useRef(false);
@@ -168,10 +171,10 @@ const FocusSession = () => {
     }
   };
 
-  const askTutor = async () => {
-    if (!input.trim() || isAsking) return;
+  const askTutor = async (questionText = input) => {
+    if (!questionText.trim() || isAsking) return;
 
-    const question = input.trim();
+    const question = questionText.trim();
     setInput("");
     setError("");
     setIsAsking(true);
@@ -210,6 +213,7 @@ const FocusSession = () => {
   const generateSummary = async () => {
     try {
       setError("");
+      setIsGeneratingSummary(true);
       const response = await fetch(`${FOCUS_API_BASE_URL}/sessions/${sessionId}/summary`, {
         headers: getAuthHeaders(),
         credentials: "include",
@@ -219,6 +223,37 @@ const FocusSession = () => {
       setSummaryData(data.data);
     } catch (summaryError) {
       setError(summaryError.message);
+    } finally {
+      setIsGeneratingSummary(false);
+    }
+  };
+
+  const generateSessionQuiz = async () => {
+    try {
+      setError("");
+      setIsGeneratingQuiz(true);
+      const response = await fetch(`${QUIZ_API_BASE_URL}/generate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
+        },
+        credentials: "include",
+        body: JSON.stringify({ focusSessionId: sessionId }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Unable to generate quiz");
+      navigate("/quiz-session", {
+        state: {
+          quiz: data.data,
+          returnTo: `/focus-session/${sessionId}`,
+          focusSession: session,
+        },
+      });
+    } catch (quizError) {
+      setError(quizError.message);
+    } finally {
+      setIsGeneratingQuiz(false);
     }
   };
 
@@ -341,9 +376,27 @@ const FocusSession = () => {
         <section className="rounded-[2rem] bg-[#eef1f6] p-6">
           <h2 className="mb-5 text-xl font-black text-[#4e35b5]">Session Tools</h2>
           <div className="space-y-3">
-            <ToolItem icon={<Brain size={21} />} title="Explain Concept" subtitle="Break down complex topics" onClick={() => setInput(`Explain ${session.topicName} in simple steps with one example.`)} />
-            <ToolItem icon={<HelpCircle size={21} />} title="Generate Quiz" subtitle="Test your knowledge now" onClick={() => navigate("/quiz-setup")} />
-            <ToolItem icon={<FileText size={21} />} title="Smart Summary" subtitle="Key takeaways from session" onClick={generateSummary} />
+            <ToolItem
+              icon={isAsking ? <Loader2 className="animate-spin" size={21} /> : <Brain size={21} />}
+              title="Explain Concept"
+              subtitle="Break down complex topics"
+              onClick={() => askTutor(`Explain ${session.topicName} in simple steps with one example.`)}
+              disabled={isAsking}
+            />
+            <ToolItem
+              icon={isGeneratingQuiz ? <Loader2 className="animate-spin" size={21} /> : <HelpCircle size={21} />}
+              title="Generate Quiz"
+              subtitle="Test your current focus"
+              onClick={generateSessionQuiz}
+              disabled={isGeneratingQuiz}
+            />
+            <ToolItem
+              icon={isGeneratingSummary ? <Loader2 className="animate-spin" size={21} /> : <FileText size={21} />}
+              title="Smart Summary"
+              subtitle="Key takeaways from session"
+              onClick={generateSummary}
+              disabled={isGeneratingSummary}
+            />
           </div>
         </section>
 
@@ -351,6 +404,26 @@ const FocusSession = () => {
           <section className="rounded-[2rem] bg-white p-6 shadow-sm">
             <h2 className="text-lg font-black text-[#4e35b5]">Session Summary</h2>
             <p className="mt-2 text-sm text-gray-700">{summaryData.summary}</p>
+            {Boolean(summaryData.keyPoints?.length) && (
+              <div className="mt-4">
+                <h3 className="text-sm font-black text-[#17436f]">Key Points</h3>
+                <ul className="mt-2 space-y-2 text-sm text-gray-700">
+                  {summaryData.keyPoints.map((point, index) => (
+                    <li key={`${point}-${index}`} className="rounded-2xl bg-[#f8f9fc] px-4 py-3">{point}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {Boolean(summaryData.nextSteps?.length) && (
+              <div className="mt-4">
+                <h3 className="text-sm font-black text-[#17436f]">Next Steps</h3>
+                <ul className="mt-2 space-y-2 text-sm text-gray-700">
+                  {summaryData.nextSteps.map((step, index) => (
+                    <li key={`${step}-${index}`} className="rounded-2xl bg-[#f8f9fc] px-4 py-3">{step}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </section>
         )}
 
@@ -451,8 +524,12 @@ const SessionNav = ({ onExit }) => {
   );
 };
 
-const ToolItem = ({ icon, title, subtitle, onClick }) => (
-  <button onClick={onClick} className="flex w-full items-center gap-4 rounded-3xl bg-white px-4 py-4 text-left">
+const ToolItem = ({ icon, title, subtitle, onClick, disabled = false }) => (
+  <button
+    onClick={onClick}
+    disabled={disabled}
+    className="flex w-full items-center gap-4 rounded-3xl bg-white px-4 py-4 text-left disabled:opacity-60"
+  >
     <span className="grid h-11 w-11 place-items-center rounded-full bg-[#dffcf1] text-[#326a5d]">
       {icon}
     </span>

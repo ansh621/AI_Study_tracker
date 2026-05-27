@@ -1,5 +1,6 @@
 import React from "react";
-import { Bell, Brain, Flame } from "lucide-react";
+import { Brain, Flame } from "lucide-react";
+import NotificationBell from "../../components/NotificationBell";
 
 const ParentDash = () => {
   const [studentData, setStudentData] = React.useState({
@@ -50,9 +51,7 @@ const ParentDash = () => {
     <div className="min-h-screen bg-[#f8f9fc] text-[#2d3338] pb-24">
       <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-slate-50/80 backdrop-blur-xl flex items-center justify-between px-6">
         <h1 className="text-xl font-bold text-violet-700">Welcome back, {parentData.name}</h1>
-        <button className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-slate-200/50 transition">
-          <Bell className="w-5 h-5 text-slate-500" />
-        </button>
+        <NotificationBell />
       </header>
 
       <main className="max-w-7xl mx-auto px-6 pt-24 space-y-10">

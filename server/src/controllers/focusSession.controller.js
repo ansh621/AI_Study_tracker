@@ -4,6 +4,7 @@ const StudentSyllabus = require("../DB/Model/syllabus.model");
 const StudentInfo = require("../DB/Model/student.user");
 const User = require("../DB/Model/model.user");
 const { recordStudyActivity } = require("../middleware/activity.streak");
+const { notifyStudent } = require("../utils/notification.service");
 
 function cleanJson(text) {
   return text.replace(/```json/gi, "").replace(/```/g, "").trim();
@@ -152,6 +153,13 @@ async function endFocusSession(req, res) {
       session.endedAt = new Date();
       await session.save();
       await recordStudyActivity(req.user.id);
+      await notifyStudent(req.user.id, {
+        title: session.status === "completed" ? "Focus session completed" : "Focus session ended",
+        message: `${session.subjectName} - ${session.topicName}`,
+        type: "focus",
+        link: `/focus-session/${session._id}`,
+        uniqueKey: `focus-ended-${session._id}`,
+      });
     }
 
     res.status(200).json({

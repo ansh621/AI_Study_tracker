@@ -14,6 +14,7 @@ import { motion}  from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
 import NavBar from "../../components/NavBar";
+import NotificationBell from "../../components/NotificationBell";
 
 const API_BASE_URL = "http://localhost:3000/api/dashboard";
 const AUTH_API_BASE_URL = "http://localhost:3000/api/auth";
@@ -297,6 +298,8 @@ const Dashboard = () => {
         </div>
 
         <div className="flex items-center gap-2">
+          <NotificationBell />
+
           <button
             onClick={() => navigate("/ProfilePage")}
             className="p-2 hover:bg-gray-100 rounded-full text-gray-500"

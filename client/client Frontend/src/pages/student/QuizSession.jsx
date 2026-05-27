@@ -13,6 +13,8 @@ const QuizSession = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const quiz = location.state?.quiz;
+  const returnTo = location.state?.returnTo || "/quiz-setup";
+  const focusSession = location.state?.focusSession;
   const [answers, setAnswers] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
@@ -75,7 +77,10 @@ const QuizSession = () => {
     <div className="min-h-screen bg-[#f8f9fc] pb-24 text-[#111827]">
       <header className="mx-auto flex max-w-md items-center justify-between px-6 py-5">
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate("/quiz-setup")} className="grid h-10 w-10 place-items-center rounded-full bg-[#eef1f7] text-[#6152a8]">
+          <button
+            onClick={() => navigate(returnTo, focusSession ? { state: { session: focusSession } } : undefined)}
+            className="grid h-10 w-10 place-items-center rounded-full bg-[#eef1f7] text-[#6152a8]"
+          >
             <ArrowLeft size={20} />
           </button>
           <span className="text-xl font-black text-[#6b2cf5]">Focus Nest Quiz</span>
@@ -106,21 +111,39 @@ const QuizSession = () => {
           </div>
         )}
 
-        {questions.map((question, qIndex) => (
+        {questions.map((question, qIndex) => {
+          const reviewItem = result?.review?.[qIndex];
+          return (
           <section key={`${question.question}-${qIndex}`} className="rounded-[2rem] bg-white p-6 shadow-sm">
-            <h2 className="text-sm font-black text-[#17436f]">{qIndex + 1}. {question.question}</h2>
+            <div className="flex items-start justify-between gap-3">
+              <h2 className="text-sm font-black text-[#17436f]">{qIndex + 1}. {question.question}</h2>
+              {reviewItem && (
+                <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-black ${
+                  reviewItem.isCorrect ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+                }`}>
+                  {reviewItem.isCorrect ? "Correct" : "Wrong"}
+                </span>
+              )}
+            </div>
             <div className="mt-4 space-y-2">
               {question.options.map((option, optionIndex) => {
                 const label = ["A", "B", "C", "D"][optionIndex];
                 const selected = answers[qIndex] === label;
+                const isCorrectAnswer = reviewItem?.correctAnswer === label;
+                const isWrongSelection = reviewItem && selected && !isCorrectAnswer;
                 return (
                   <button
                     key={`${label}-${option}`}
                     onClick={() => handleAnswer(qIndex, optionIndex)}
+                    disabled={Boolean(result)}
                     className={`w-full rounded-2xl border px-4 py-3 text-left text-sm font-semibold ${
-                      selected
-                        ? "border-[#8f79df] bg-[#f4f1ff] text-[#4e35b5]"
-                        : "border-gray-100 bg-[#f8f9fc]"
+                      isCorrectAnswer
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                        : isWrongSelection
+                          ? "border-red-200 bg-red-50 text-red-700"
+                          : selected
+                            ? "border-[#8f79df] bg-[#f4f1ff] text-[#4e35b5]"
+                            : "border-gray-100 bg-[#f8f9fc]"
                     }`}
                   >
                     {label}. {option}
@@ -128,8 +151,15 @@ const QuizSession = () => {
                 );
               })}
             </div>
+            {reviewItem && (
+              <div className="mt-4 rounded-2xl bg-[#f8f9fc] px-4 py-3 text-xs font-semibold text-gray-700">
+                <p>Your answer: {reviewItem.selectedAnswer}. {reviewItem.selectedOption || "Not answered"}</p>
+                <p className="mt-1 text-[#326a5d]">Correct answer: {reviewItem.correctAnswer}. {reviewItem.correctOption}</p>
+              </div>
+            )}
           </section>
-        ))}
+          );
+        })}
 
         <button
           onClick={handleSubmit}

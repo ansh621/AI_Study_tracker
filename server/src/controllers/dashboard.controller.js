@@ -2,6 +2,7 @@ const DailyStudyContext = require("../DB/Model/DailyStudyContextSchema.model");
 const DailyTask = require("../DB/Model/DailyTaskSchema.model");
 const User = require("../DB/Model/model.user");
 const { recordStudyActivity } = require("../middleware/activity.streak");
+const { notifyStudent } = require("../utils/notification.service");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 function todayRange() {
@@ -254,6 +255,14 @@ async function saveDailyContext(req, res) {
           generatedByAI: true,
         }))
       );
+
+      await notifyStudent(userId, {
+        title: "Today's tasks are ready",
+        message: `${tasks.length} AI study task${tasks.length > 1 ? "s are" : " is"} ready for today.`,
+        type: "task",
+        link: "/dashboard",
+        uniqueKey: `tasks-ready-${userId}-${start.toISOString().slice(0, 10)}`,
+      });
     }
 
     res.status(201).json({
