@@ -25,7 +25,7 @@ const formatTime = (dateValue) => {
   return date.toLocaleDateString();
 };
 
-const NotificationBell = ({ className = "" }) => {
+const NotificationParent = ({ className = "" }) => {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -117,7 +117,7 @@ const NotificationBell = ({ className = "" }) => {
       </button>
 
       {open && (
-        <div className="absolute  left-1/2 transform -translate-x-1/2 top-12 z-[70] w-80 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-2xl">
+        <div className="absolute  right-0 top-12 z-[70] w-80 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-2xl">
           <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
             <div>
               <p className="text-sm font-black text-slate-900">Notifications</p>
@@ -179,4 +179,4 @@ const NotificationBell = ({ className = "" }) => {
   );
 };
 
-export default NotificationBell;
+export default NotificationParent;

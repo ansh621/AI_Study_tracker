@@ -1,6 +1,7 @@
 import React from "react";
 import { Brain, Flame } from "lucide-react";
 import NotificationBell from "../../components/NotificationBell";
+import NotificationParent from "../../components/NotificationParent";
 
 const ParentDash = () => {
   const [studentData, setStudentData] = React.useState({
@@ -48,22 +49,29 @@ const ParentDash = () => {
   const maxScore = Math.max(100, ...subjectPerformance.map((item) => item.accuracy || 0));
 
   return (
-    <div className="min-h-screen bg-[#f8f9fc] text-[#2d3338] pb-24">
+    <div className="min-h-screen bg-neutral-100 text-[#2d3338] pb-24">
       <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-slate-50/80 backdrop-blur-xl flex items-center justify-between px-6">
+        
         <h1 className="text-xl font-bold text-violet-700">Welcome back, {parentData.name}</h1>
-        <NotificationBell />
+        <NotificationParent />
       </header>
+      
 
       <main className="max-w-7xl mx-auto px-6 pt-24 space-y-10">
+        
         <section className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <span className="text-[#31638a] font-semibold tracking-wide text-sm">PARENTAL VIEW</span>
             <h2 className="text-4xl font-extrabold mt-1">{studentData.name}'s Report</h2>
           </div>
-          <div className="flex items-center gap-2 bg-[#f1f4f8] px-6 py-3 rounded-full">
+          
+          <div className="flex items-center gap-2 bg-[#f1f4f8] px- py-3 rounded-full">
             <Flame className="text-[#6152a8] w-5 h-5 fill-[#6152a8]" />
-            <span className="font-bold">{studentData.streak} Day Streak</span>
+            <span className="font-bold border border-violet-300 bg-violet-100 text-violet-700 py-1 px-3 rounded-full">
+              {studentData.streak} Day Streak
+            </span>
           </div>
+          
         </section>
 
         <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -132,7 +140,7 @@ const ParentDash = () => {
 
         <section className="bg-[#f1f4f8] rounded-2xl overflow-hidden">
           {(studentData.tasks || []).map((task) => (
-            <div key={task._id} className="p-5 border-b border-slate-200 flex items-center justify-between gap-3">
+            <div key={task._id} className="p-5 border-1 border-violet-200 flex items-center justify-between gap-3  my-2 rounded-lg ">
               <div>
                 <p className="font-bold">{task.title}</p>
                 <p className="text-sm text-slate-500">{task.description}</p>

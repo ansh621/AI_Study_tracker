@@ -21,12 +21,18 @@ const QUIZ_API_BASE_URL = "http://localhost:3000/api/quiz";
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("Token");
-  return token && token !== "undefined" ? { Authorization: `Bearer ${token}` } : {};
+  return token && token !== "undefined"
+    ? { Authorization: `Bearer ${token}` }
+    : {};
 };
 
 const formatTime = (seconds) => {
-  const mins = Math.floor(seconds / 60).toString().padStart(2, "0");
-  const secs = Math.floor(seconds % 60).toString().padStart(2, "0");
+  const mins = Math.floor(seconds / 60)
+    .toString()
+    .padStart(2, "0");
+  const secs = Math.floor(seconds % 60)
+    .toString()
+    .padStart(2, "0");
   return `${mins}:${secs}`;
 };
 
@@ -35,10 +41,10 @@ const FocusSession = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
   const [session, setSession] = useState(state?.session || null);
-  
+
   // Set initial configuration from loaded session state dynamically
   const initialDuration = state?.session?.durationMinutes || 25;
-  const [sessionTimer, setSessionTimer] = useState(initialDuration); 
+  const [sessionTimer, setSessionTimer] = useState(initialDuration);
   const [secondsLeft, setSecondsLeft] = useState(initialDuration * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [input, setInput] = useState("");
@@ -48,15 +54,30 @@ const FocusSession = () => {
   const [error, setError] = useState("");
   const [summaryData, setSummaryData] = useState(null);
   const hasEndedRef = useRef(false);
+  const secondsLeftRef = useRef(initialDuration * 60);
+  const totalSecondsCapRef = useRef(initialDuration * 60);
 
   const tutorMessages = session?.tutorMessages || [];
-  
+
   // Track the configuration cap separately so the progress bar calculates correctly
   const [totalSecondsCap, setTotalSecondsCap] = useState(initialDuration * 60);
 
   const progress = useMemo(() => {
-    return totalSecondsCap ? Math.max(0, Math.min(1, secondsLeft / totalSecondsCap)) : 1;
+    return totalSecondsCap
+      ? Math.max(0, Math.min(1, secondsLeft / totalSecondsCap))
+      : 1;
   }, [secondsLeft, totalSecondsCap]);
+
+  useEffect(() => {
+    secondsLeftRef.current = secondsLeft;
+  }, [secondsLeft]);
+
+  useEffect(() => {
+    totalSecondsCapRef.current = totalSecondsCap;
+  }, [totalSecondsCap]);
+
+  const getElapsedSeconds = () =>
+    Math.max(0, totalSecondsCapRef.current - secondsLeftRef.current);
 
   // Load Session Data
   useEffect(() => {
@@ -64,10 +85,13 @@ const FocusSession = () => {
       if (session) return;
 
       try {
-        const response = await fetch(`${FOCUS_API_BASE_URL}/sessions/${sessionId}`, {
-          headers: getAuthHeaders(),
-          credentials: "include",
-        });
+        const response = await fetch(
+          `${FOCUS_API_BASE_URL}/sessions/${sessionId}`,
+          {
+            headers: getAuthHeaders(),
+            credentials: "include",
+          },
+        );
         const data = await response.json();
 
         if (!response.ok) {
@@ -79,6 +103,8 @@ const FocusSession = () => {
         setSessionTimer(fetchedDuration);
         setSecondsLeft(fetchedDuration * 60);
         setTotalSecondsCap(fetchedDuration * 60);
+        secondsLeftRef.current = fetchedDuration * 60;
+        totalSecondsCapRef.current = fetchedDuration * 60;
       } catch (loadError) {
         setError(loadError.message);
       }
@@ -114,14 +140,18 @@ const FocusSession = () => {
 
   // Page Navigation Guards
   useEffect(() => {
-    window.history.pushState({ focusLocked: true }, "");
+    if (session?.status !== "active" || hasEndedRef.current) return undefined;
+
+    window.history.pushState({ focusLocked: true }, "", window.location.href);
 
     const handleBack = () => {
+      window.history.pushState({ focusLocked: true }, "", window.location.href);
       finishSession("exited", true);
     };
 
     const handleBeforeUnload = (event) => {
       if (session?.status === "active" && !hasEndedRef.current) {
+        finishSession("exited", false, null, true);
         event.preventDefault();
         event.returnValue = "";
       }
@@ -139,22 +169,28 @@ const FocusSession = () => {
   const finishSession = async (
     status = "completed",
     showExitMessage = false,
-    destination = "/dashboard"
+    destination = "/dashboard",
+    keepalive = false,
   ) => {
     if (!sessionId || hasEndedRef.current) return;
 
     hasEndedRef.current = true;
+    const actualElapsedSeconds = getElapsedSeconds();
 
     try {
-      const response = await fetch(`${FOCUS_API_BASE_URL}/sessions/${sessionId}/end`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          ...getAuthHeaders(),
+      const response = await fetch(
+        `${FOCUS_API_BASE_URL}/sessions/${sessionId}/end`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            ...getAuthHeaders(),
+          },
+          credentials: "include",
+          keepalive,
+          body: JSON.stringify({ status, actualElapsedSeconds }),
         },
-        credentials: "include",
-        body: JSON.stringify({ status }),
-      });
+      );
       const data = await response.json();
 
       if (response.ok) {
@@ -165,9 +201,13 @@ const FocusSession = () => {
     } finally {
       setIsRunning(false);
       if (showExitMessage) {
-        window.alert("Your focus session was finished because you left the session screen.");
+        window.alert(
+          "Your focus session was finished because you left the session screen.",
+        );
       }
-      navigate(destination, { replace: true });
+      if (destination) {
+        navigate(destination, { replace: true });
+      }
     }
   };
 
@@ -187,15 +227,18 @@ const FocusSession = () => {
     }));
 
     try {
-      const response = await fetch(`${FOCUS_API_BASE_URL}/sessions/${sessionId}/tutor`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...getAuthHeaders(),
+      const response = await fetch(
+        `${FOCUS_API_BASE_URL}/sessions/${sessionId}/tutor`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...getAuthHeaders(),
+          },
+          credentials: "include",
+          body: JSON.stringify({ question }),
         },
-        credentials: "include",
-        body: JSON.stringify({ question }),
-      });
+      );
       const data = await response.json();
 
       if (!response.ok) {
@@ -214,12 +257,16 @@ const FocusSession = () => {
     try {
       setError("");
       setIsGeneratingSummary(true);
-      const response = await fetch(`${FOCUS_API_BASE_URL}/sessions/${sessionId}/summary`, {
-        headers: getAuthHeaders(),
-        credentials: "include",
-      });
+      const response = await fetch(
+        `${FOCUS_API_BASE_URL}/sessions/${sessionId}/summary`,
+        {
+          headers: getAuthHeaders(),
+          credentials: "include",
+        },
+      );
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Unable to generate summary");
+      if (!response.ok)
+        throw new Error(data.message || "Unable to generate summary");
       setSummaryData(data.data);
     } catch (summaryError) {
       setError(summaryError.message);
@@ -242,7 +289,8 @@ const FocusSession = () => {
         body: JSON.stringify({ focusSessionId: sessionId }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Unable to generate quiz");
+      if (!response.ok)
+        throw new Error(data.message || "Unable to generate quiz");
       navigate("/quiz-session", {
         state: {
           quiz: data.data,
@@ -287,14 +335,14 @@ const FocusSession = () => {
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-[#f8f9fc] flex items-center justify-center text-[#6152a8]">
+      <div className="min-h-screen bg-violet-100 flex items-center justify-center text-[#6152a8]">
         <Loader2 className="animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f8f9fc] pb-28 text-[#111827]">
+    <div className="min-h-screen bg-violet-100 pb-28 text-[#111827]">
       <header className="mx-auto flex max-w-md items-center justify-between px-6 py-5">
         <div className="flex items-center gap-3">
           <div className="grid h-10 w-10 place-items-center rounded-full bg-[#e4b9a7] text-white">
@@ -302,7 +350,10 @@ const FocusSession = () => {
           </div>
           <span className="text-xl font-black text-[#6b2cf5]">Focus Nest</span>
         </div>
-        <button className="grid h-10 w-10 place-items-center rounded-full text-slate-500" aria-label="Notifications">
+        <button
+          className="grid h-10 w-10 place-items-center rounded-full text-slate-500"
+          aria-label="Notifications"
+        >
           <Bell size={20} />
         </button>
       </header>
@@ -328,7 +379,9 @@ const FocusSession = () => {
             >
               <div className="grid h-36 w-36 place-items-center rounded-full bg-white text-center shadow-inner">
                 <div>
-                  <p className="text-5xl font-black tracking-tight">{formatTime(secondsLeft)}</p>
+                  <p className="text-5xl font-black tracking-tight">
+                    {formatTime(secondsLeft)}
+                  </p>
                   <p className="mt-1 text-sm text-gray-500">Time Remaining</p>
                 </div>
               </div>
@@ -338,6 +391,9 @@ const FocusSession = () => {
           <p className="mx-auto mt-5 max-w-[16rem] text-center text-sm font-bold text-[#6152a8]">
             {session.subjectName} - {session.topicName}
           </p>
+          <p className="mt-2 text-center text-xs font-semibold text-gray-500">
+            Time spent: {formatTime(getElapsedSeconds())}
+          </p>
 
           <div className="mt-7 grid grid-cols-[1fr_auto] gap-4">
             <button
@@ -346,52 +402,78 @@ const FocusSession = () => {
             >
               {isRunning ? "Pause Session" : "Start Session"}
             </button>
+          </div>
+          <div className="flex justify-between  mt-5 px-5">
             <button
-              onClick={handleDecreaseTimer}
+              onClick={handleIncreaseTimer}
               disabled={isRunning}
-              className="grid h-14 w-14 place-items-center rounded-full bg-[#eef1f7] text-[#6152a8] disabled:opacity-40"
-              aria-label="Decrease timer"
+              className="grid h-14 w-14 place-items-center font-bold text-2xl rounded-full bg-[#eef1f7] text-[#6152a8] disabled:opacity-40"
+              aria-label="Increase timer"
             >
-              -
+              +
             </button>
             <button
               onClick={handleResetTimer}
-              className="grid h-14 w-14 place-items-center rounded-full bg-[#eef1f7] text-[#6152a8]"
+              className="grid h-14 w-14 place-items-center font-bold text-2xl rounded-full bg-[#eef1f7] text-[#6152a8]"
               aria-label="Reset timer"
             >
               <RefreshCw size={21} />
             </button>
-            
+
             <button
-              onClick={handleIncreaseTimer}
+              onClick={handleDecreaseTimer}
               disabled={isRunning}
-              className="grid h-14 w-14 place-items-center rounded-full bg-[#eef1f7] text-[#6152a8] disabled:opacity-40"
-              aria-label="Increase timer"
+              className="grid h-14 w-14 place-items-center font-bold text-2xl rounded-full bg-[#eef1f7] text-[#6152a8] disabled:opacity-40"
+              aria-label="Decrease timer"
             >
-              +
+              -
             </button>
           </div>
         </section>
 
         <section className="rounded-[2rem] bg-[#eef1f6] p-6">
-          <h2 className="mb-5 text-xl font-black text-[#4e35b5]">Session Tools</h2>
+          <h2 className="mb-5 text-xl font-black text-[#4e35b5]">
+            Session Tools
+          </h2>
           <div className="space-y-3">
             <ToolItem
-              icon={isAsking ? <Loader2 className="animate-spin" size={21} /> : <Brain size={21} />}
+              icon={
+                isAsking ? (
+                  <Loader2 className="animate-spin" size={21} />
+                ) : (
+                  <Brain size={21} />
+                )
+              }
               title="Explain Concept"
               subtitle="Break down complex topics"
-              onClick={() => askTutor(`Explain ${session.topicName} in simple steps with one example.`)}
+              onClick={() =>
+                askTutor(
+                  `Explain ${session.topicName} in simple steps with one example.`,
+                )
+              }
               disabled={isAsking}
             />
             <ToolItem
-              icon={isGeneratingQuiz ? <Loader2 className="animate-spin" size={21} /> : <HelpCircle size={21} />}
+              icon={
+                isGeneratingQuiz ? (
+                  <Loader2 className="animate-spin" size={21} />
+                ) : (
+                  <HelpCircle size={21} />
+                )
+              }
               title="Generate Quiz"
               subtitle="Test your current focus"
               onClick={generateSessionQuiz}
               disabled={isGeneratingQuiz}
             />
             <ToolItem
-              icon={isGeneratingSummary ? <Loader2 className="animate-spin" size={21} /> : <FileText size={21} />}
+              icon={
+                isGeneratingSummary ? (
+                  <Loader2 className="animate-spin" size={21} />
+                ) : (
+                  <FileText size={21} />
+                )
+              }
               title="Smart Summary"
               subtitle="Key takeaways from session"
               onClick={generateSummary}
@@ -402,24 +484,40 @@ const FocusSession = () => {
 
         {summaryData && (
           <section className="rounded-[2rem] bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-black text-[#4e35b5]">Session Summary</h2>
+            <h2 className="text-lg font-black text-[#4e35b5]">
+              Session Summary
+            </h2>
             <p className="mt-2 text-sm text-gray-700">{summaryData.summary}</p>
             {Boolean(summaryData.keyPoints?.length) && (
               <div className="mt-4">
-                <h3 className="text-sm font-black text-[#17436f]">Key Points</h3>
+                <h3 className="text-sm font-black text-[#17436f]">
+                  Key Points
+                </h3>
                 <ul className="mt-2 space-y-2 text-sm text-gray-700">
                   {summaryData.keyPoints.map((point, index) => (
-                    <li key={`${point}-${index}`} className="rounded-2xl bg-[#f8f9fc] px-4 py-3">{point}</li>
+                    <li
+                      key={`${point}-${index}`}
+                      className="rounded-2xl bg-[#f8f9fc] px-4 py-3"
+                    >
+                      {point}
+                    </li>
                   ))}
                 </ul>
               </div>
             )}
             {Boolean(summaryData.nextSteps?.length) && (
               <div className="mt-4">
-                <h3 className="text-sm font-black text-[#17436f]">Next Steps</h3>
+                <h3 className="text-sm font-black text-[#17436f]">
+                  Next Steps
+                </h3>
                 <ul className="mt-2 space-y-2 text-sm text-gray-700">
                   {summaryData.nextSteps.map((step, index) => (
-                    <li key={`${step}-${index}`} className="rounded-2xl bg-[#f8f9fc] px-4 py-3">{step}</li>
+                    <li
+                      key={`${step}-${index}`}
+                      className="rounded-2xl bg-[#f8f9fc] px-4 py-3"
+                    >
+                      {step}
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -478,14 +576,6 @@ const FocusSession = () => {
               <Send size={20} />
             </button>
           </div>
-
-          <div className="mt-4 flex gap-2 overflow-hidden">
-            {["SUPERPOSITION", "CHEMICAL BONDING", "MIND MAP"].map((chip) => (
-              <span key={chip} className="shrink-0 rounded-full bg-[#e8edf2] px-3 py-1 text-[10px] font-black text-gray-500">
-                {chip}
-              </span>
-            ))}
-          </div>
         </section>
 
         <button
@@ -496,7 +586,9 @@ const FocusSession = () => {
         </button>
       </main>
 
-      <SessionNav onExit={(destination) => finishSession("exited", true, destination)} />
+      <SessionNav
+        onExit={(destination) => finishSession("exited", true, destination)}
+      />
     </div>
   );
 };
@@ -505,7 +597,7 @@ const SessionNav = ({ onExit }) => {
   const items = [
     { label: "Home", icon: HomeIcon, to: "/dashboard" },
     { label: "AI Tutor", icon: Bot, to: "/focus-setup" },
-    { label: "Progress", icon: BarChart3, to: "/insights" },
+    { label: "Insights", icon: BarChart3, to: "/insights" },
   ];
 
   return (
@@ -544,7 +636,9 @@ const MessageBubble = ({ message }) => {
   const isStudent = message.role === "student";
 
   return (
-    <div className={`flex gap-3 ${isStudent ? "justify-end" : "justify-start"}`}>
+    <div
+      className={`flex gap-3 ${isStudent ? "justify-end" : "justify-start"}`}
+    >
       {!isStudent && (
         <span className="mt-1 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#8f79df] text-white">
           <Bot size={16} />

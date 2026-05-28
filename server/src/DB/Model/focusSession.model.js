@@ -48,6 +48,14 @@ const FocusSessionSchema = new mongoose.Schema(
       type: Number,
       default: 25,
     },
+    actualDurationSeconds: {
+      type: Number,
+      default: 0,
+    },
+    actualDurationMinutes: {
+      type: Number,
+      default: 0,
+    },
     status: {
       type: String,
       enum: ["active", "completed", "exited"],

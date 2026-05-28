@@ -176,7 +176,7 @@ const FocusSetup = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8f9fc] pb-10 text-[#1f2937]">
+    <div className="min-h-screen bg-violet-100 pb-10 text-[#1f2937]">
       <header className="sticky top-0 z-20 bg-white/85 backdrop-blur-xl border-b border-gray-100">
         <div className="mx-auto flex max-w-5xl items-center gap-4 px-5 py-4">
           <button

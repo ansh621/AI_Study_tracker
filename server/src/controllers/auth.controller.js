@@ -87,7 +87,7 @@ async function loginUser(req, res) {
     });
 
     res.status(200).json({
-      message: "Login successful from backend",
+      message: "Login successful",
       token,
       role: user.role,
     });

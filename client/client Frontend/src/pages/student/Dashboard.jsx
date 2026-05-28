@@ -7,10 +7,11 @@ import {
   MoreVertical,
   Plus,
   LogOut,
-  Settings
+  Settings,
+  TimerIcon,
 } from "lucide-react";
 
-import { motion}  from "framer-motion";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
 import NavBar from "../../components/NavBar";
@@ -19,25 +20,27 @@ import NotificationBell from "../../components/NotificationBell";
 const API_BASE_URL = "http://localhost:3000/api/dashboard";
 const AUTH_API_BASE_URL = "http://localhost:3000/api/auth";
 const STUDENT_API_BASE_URL = "http://localhost:3000/api/student";
-const FEMALE_DP_URL = "https://i.pinimg.com/1200x/52/ab/65/52ab657ec99f64c416b026a3bc8dc7df.jpg";
-const MALE_DP_URL = "https://i.pinimg.com/1200x/62/6d/72/626d72baaf98ece97098fbdcef8ece2b.jpg";
+const FEMALE_DP_URL =
+  "https://i.pinimg.com/1200x/52/ab/65/52ab657ec99f64c416b026a3bc8dc7df.jpg";
+const MALE_DP_URL =
+  "https://i.pinimg.com/1200x/62/6d/72/626d72baaf98ece97098fbdcef8ece2b.jpg";
 
 const emptyStats = {
   completedTasks: 0,
   totalTasks: 0,
-  focusMinutes: 0
+  focusMinutes: 0,
 };
 
 const emptyStreak = {
   count: 0,
   longestStreak: 0,
-  lastActive: null
+  lastActive: null,
 };
 
 const normalizeStreak = (streak) => ({
   count: Number(streak?.count) || 0,
   longestStreak: Number(streak?.longestStreak) || 0,
-  lastActive: streak?.lastActive || null
+  lastActive: streak?.lastActive || null,
 });
 
 const buildStats = (taskList) => ({
@@ -45,18 +48,18 @@ const buildStats = (taskList) => ({
   totalTasks: taskList.length,
   focusMinutes: taskList
     .filter((task) => task.status === "completed")
-    .reduce((total, task) => total + (task.estimatedMinutes || 0), 0)
+    .reduce((total, task) => total + (task.estimatedMinutes || 0), 0),
 });
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("Token");
 
-  return token && token !== "undefined" ? { Authorization: `Bearer ${token}` } : {};
+  return token && token !== "undefined"
+    ? { Authorization: `Bearer ${token}` }
+    : {};
 };
 
-
 const Dashboard = () => {
- 
   const navigate = useNavigate();
 
   const [name, setName] = useState("");
@@ -80,39 +83,36 @@ const Dashboard = () => {
     studied: "",
     homework: "",
     testSubject: "",
-    testDate: ""
+    testDate: "",
   });
 
-  /*
-  |--------------------------------------------------------------------------
-  | FETCH DAILY STATUS
-  |--------------------------------------------------------------------------
-  */
-  
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const [statusResponse, studentResponse, profileResponse] = await Promise.all([
-          fetch(`${API_BASE_URL}/daily-status`, {
-            headers: getAuthHeaders(),
-            credentials: "include"
-          }),
-          fetch(`${API_BASE_URL}/student-info`, {
-            headers: getAuthHeaders(),
-            credentials: "include"
-          }),
-          fetch(`${STUDENT_API_BASE_URL}/profile`, {
-            headers: getAuthHeaders(),
-            credentials: "include"
-          })
-        ]);
+        const [statusResponse, studentResponse, profileResponse] =
+          await Promise.all([
+            fetch(`${API_BASE_URL}/daily-status`, {
+              headers: getAuthHeaders(),
+              credentials: "include",
+            }),
+            fetch(`${API_BASE_URL}/student-info`, {
+              headers: getAuthHeaders(),
+              credentials: "include",
+            }),
+            fetch(`${STUDENT_API_BASE_URL}/profile`, {
+              headers: getAuthHeaders(),
+              credentials: "include",
+            }),
+          ]);
 
         const statusData = await statusResponse.json();
         const studentData = await studentResponse.json();
         const profileData = await profileResponse.json();
 
         if (!statusResponse.ok) {
-          throw new Error(statusData.message || "Unable to load dashboard status");
+          throw new Error(
+            statusData.message || "Unable to load dashboard status",
+          );
         }
 
         if (!studentResponse.ok) {
@@ -138,38 +138,28 @@ const Dashboard = () => {
 
     fetchDashboardData();
   }, []);
-  /*
-  |--------------------------------------------------------------------------
-  | HANDLE DAILY CHECK-IN
-  |--------------------------------------------------------------------------
-  */
 
   const handleGenerateTasks = async () => {
-
     try {
       setDashboardError("");
       setIsGeneratingTasks(true);
 
-      const response = await fetch(
-        `${API_BASE_URL}/daily-context`,
-        {
-          method: "POST",
+      const response = await fetch(`${API_BASE_URL}/daily-context`, {
+        method: "POST",
 
-          headers: {
-            "Content-Type": "application/json",
-            ...getAuthHeaders()
-          },
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
+        },
 
-          credentials: "include",
+        credentials: "include",
 
-          body: JSON.stringify(dailyContext)
-        }
-      );
+        body: JSON.stringify(dailyContext),
+      });
 
       const data = await response.json();
 
       if (response.ok) {
-
         setTasks(data.tasks);
 
         setHasSubmittedToday(true);
@@ -180,9 +170,7 @@ const Dashboard = () => {
       } else {
         throw new Error(data.message || "Unable to generate daily plan");
       }
-
     } catch (error) {
-
       console.error(error);
       setDashboardError(error.message);
     } finally {
@@ -190,37 +178,29 @@ const Dashboard = () => {
     }
   };
 
-  /*
-  |--------------------------------------------------------------------------
-  | TOGGLE TASK
-  |--------------------------------------------------------------------------
-  */
-
   const toggleTask = async (taskId) => {
-
     try {
-
       setTasks((prev) =>
         prev.map((task) =>
           task._id === taskId
-            ? { ...task, status: task.status === "completed" ? "pending" : "completed" }
-            : task
-        )
+            ? {
+                ...task,
+                status: task.status === "completed" ? "pending" : "completed",
+              }
+            : task,
+        ),
       );
 
-      const response = await fetch(
-        `${API_BASE_URL}/task/${taskId}`,
-        {
-          method: "PATCH",
+      const response = await fetch(`${API_BASE_URL}/task/${taskId}`, {
+        method: "PATCH",
 
-          headers: {
-            "Content-Type": "application/json",
-            ...getAuthHeaders()
-          },
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
+        },
 
-          credentials: "include"
-        }
-      );
+        credentials: "include",
+      });
 
       const data = await response.json();
 
@@ -230,7 +210,7 @@ const Dashboard = () => {
 
       setTasks((prev) => {
         const nextTasks = prev.map((task) =>
-          task._id === taskId ? data.task : task
+          task._id === taskId ? data.task : task,
         );
 
         setStats(buildStats(nextTasks));
@@ -240,9 +220,7 @@ const Dashboard = () => {
       if (data.streak) {
         setStreak(normalizeStreak(data.streak));
       }
-
     } catch (error) {
-
       console.error(error);
       setDashboardError(error.message);
     }
@@ -263,7 +241,6 @@ const Dashboard = () => {
   };
 
   if (loading) {
-
     return (
       <div className="min-h-screen flex items-center justify-center">
         <h1 className="text-xl font-bold text-[#6152a8]">
@@ -274,27 +251,25 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="bg-[#f8f9fc] min-h-screen pb-32">
-
+    <div className="bg-violet-100 min-h-screen pb-32">
       {/* HEADER */}
 
       <header className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl flex justify-between items-center px-6 h-16 border-b border-gray-100">
-
         <div className="flex items-center gap-3">
-
-          <div className="w-10 h-10 rounded-full bg-[#ae9ffb] overflow-hidden">
-
-            <img
-              src={profile?.gender?.toLowerCase() === "female" ? FEMALE_DP_URL : MALE_DP_URL}
+          <div className="w-10 h-10 rounded-full bg-[#ae9ffb]  overflow-hidden">
+            <img className="w-full h-full object-cover"
+              src={
+                profile?.gender?.toLowerCase() === "female"
+                  ? FEMALE_DP_URL
+                  : MALE_DP_URL
+              }
               alt="Avatar"
             />
-
           </div>
 
           <span className="text-xl font-bold text-[#6152a8] tracking-tight">
             Welcome {name || "Student"}
           </span>
-
         </div>
 
         <div className="flex items-center gap-2">
@@ -316,13 +291,11 @@ const Dashboard = () => {
             Logout
           </button>
         </div>
-
       </header>
 
       {/* MAIN */}
 
       <main className="pt-24 px-6 max-w-7xl mx-auto space-y-12">
-
         {dashboardError && (
           <div className="rounded-2xl border border-red-100 bg-red-50 px-5 py-4 text-sm font-semibold text-red-700">
             {dashboardError}
@@ -332,9 +305,7 @@ const Dashboard = () => {
         {/* HERO */}
 
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#6152a8] to-[#ae9ffb] p-8 text-white shadow-lg">
-
           <div className="relative z-10 space-y-4">
-
             <h1 className="text-4xl font-extrabold">
               Stay Consistent, {name || "Student"}
             </h1>
@@ -349,21 +320,13 @@ const Dashboard = () => {
             >
               Start Focus Session
             </button>
-            <button
-              onClick={() => navigate("/quiz-setup")}
-              className="ml-3 bg-[#1f2937] text-white px-8 py-3 rounded-full font-bold text-sm hover:scale-105 transition-transform"
-            >
-              Generate Quiz
-            </button>
-
+            
           </div>
-
         </section>
 
         {/* STATS */}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-
           <StatCard
             title="Focus Streak"
             value={streak.count || 0}
@@ -373,13 +336,12 @@ const Dashboard = () => {
           />
 
           <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-8">
-
             <GoalCard
               title="Focus Minutes"
               current={stats.focusMinutes}
               total={200}
-              icon={<Timer />}
-              color="bg-[#6152a8]"
+              icon={<TimerIcon/>}
+              color="bg-[#6152a8] text-[#ffffff]"
             />
 
             <GoalCard
@@ -389,134 +351,153 @@ const Dashboard = () => {
               icon={<Brain />}
               color="bg-emerald-500"
             />
-
           </div>
-
         </div>
 
         {/* DAILY CHECK-IN */}
 
-        {
-          !hasSubmittedToday && !isGeneratingTasks && (
+        {!hasSubmittedToday && !isGeneratingTasks && (
+          <section className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm space-y-6">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-800">
+                Daily Check-in
+              </h2>
 
-            <section className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm space-y-6">
+              <p className="text-gray-500 mt-2">
+                Tell us what happened today so AI can build your study plan.
+              </p>
+            </div>
 
-              <div>
+            <textarea
+              placeholder="What did you study today?"
+              value={dailyContext.studied}
+              onChange={(e) =>
+                setDailyContext({
+                  ...dailyContext,
+                  studied: e.target.value,
+                })
+              }
+              className="w-full p-5 rounded-2xl border border-gray-200 outline-none resize-none h-32"
+            />
 
-                <h2 className="text-3xl font-bold text-gray-800">
-                  Daily Check-in
-                </h2>
+            <textarea
+              placeholder="Any homework?"
+              value={dailyContext.homework}
+              onChange={(e) =>
+                setDailyContext({
+                  ...dailyContext,
+                  homework: e.target.value,
+                })
+              }
+              className="w-full p-5 rounded-2xl border border-gray-200 outline-none resize-none h-28"
+            />
 
-                <p className="text-gray-500 mt-2">
-                  Tell us what happened today so AI can build your study plan.
-                </p>
-
-              </div>
-
-              <textarea
-                placeholder="What did you study today?"
-                value={dailyContext.studied}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input
+                type="text"
+                placeholder="Upcoming test subject"
+                value={dailyContext.testSubject}
                 onChange={(e) =>
                   setDailyContext({
                     ...dailyContext,
-                    studied: e.target.value
+                    testSubject: e.target.value,
                   })
                 }
-                className="w-full p-5 rounded-2xl border border-gray-200 outline-none resize-none h-32"
+                className="p-5 rounded-2xl border border-gray-200 outline-none"
               />
 
-              <textarea
-                placeholder="Any homework?"
-                value={dailyContext.homework}
+              <input
+                type="date"
+                value={dailyContext.testDate}
                 onChange={(e) =>
                   setDailyContext({
                     ...dailyContext,
-                    homework: e.target.value
+                    testDate: e.target.value,
                   })
                 }
-                className="w-full p-5 rounded-2xl border border-gray-200 outline-none resize-none h-28"
+                className="p-5 rounded-2xl border border-gray-200 outline-none"
               />
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <button
+              onClick={handleGenerateTasks}
+              disabled={isGeneratingTasks}
+              className="bg-[#6152a8] text-white px-8 py-4 rounded-2xl font-bold transition-all hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:scale-100"
+            >
+              Generate Today's Plan
+            </button>
+          </section>
+        )}
+        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#6152a8] to-[#ae9ffb] p-8 text-white shadow-lg">
+          <div className="relative z-10 space-y-4">
+            <h1 className="text-4xl font-extrabold">
+            {name || "Student"} !<br />  Time For a Quiz?
+            </h1>
 
-                <input
-                  type="text"
-                  placeholder="Upcoming test subject"
-                  value={dailyContext.testSubject}
-                  onChange={(e) =>
-                    setDailyContext({
-                      ...dailyContext,
-                      testSubject: e.target.value
-                    })
-                  }
-                  className="p-5 rounded-2xl border border-gray-200 outline-none"
-                />
+            <p className="text-lg opacity-90 max-w-md">
+              Sharpen your understanding with quick topic-based quizzes designed to strengthen concepts, improve accuracy, and build lasting confidence.</p>
 
-                <input
-                  type="date"
-                  value={dailyContext.testDate}
-                  onChange={(e) =>
-                    setDailyContext({
-                      ...dailyContext,
-                      testDate: e.target.value
-                    })
-                  }
-                  className="p-5 rounded-2xl border border-gray-200 outline-none"
-                />
-
-              </div>
-
-              <button
-                onClick={handleGenerateTasks}
-                disabled={isGeneratingTasks}
-                className="bg-[#6152a8] text-white px-8 py-4 rounded-2xl font-bold transition-all hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:scale-100"
+            <button
+              onClick={() =>  navigate("/quiz-setup")}
+              className="bg-white text-[#6152a8] px-8 py-3 rounded-full font-bold text-sm hover:scale-105 transition-transform"
+            >
+              Start Quiz Session
+            </button>
+            
+          </div>
+        </section>
+        <section class="bg-white rounded-3xl overflow-hidden flex flex-col md:flex-row items-center shadow -lg border border-gray-100">
+          <div class="p-10 flex-1 space-y-4">
+            <span class="text-primary font-bold text-xs uppercase tracking-widest">
+              Personalized AI
+            </span>
+            
+            <h2 class="text-[#6152a8] text-3xl font-extrabold text-on-surface leading-tight font-headline">
+              Stuck on a concept?
+              <br />
+              Your AI Tutor is ready.
+            </h2>
+            <p class="text-on-surface-variant max-w-sm">
+              Get instant explanations, summary cards, and practice questions
+              tailored to your learning style.
+            </p>
+            <button onClick={() =>  navigate("/focus-setup")} class="text-[#6152a8] rounded-full border border-[#6152a8] mt-4 flex items-center gap-2 bg-primary text-on-primary px-6 py-3 rounded-full font-bold hover:shadow-lg transition-all active:scale-95 duration-200">
+              Ask AI Tutor{" "}
+              <span
+                class="material-symbols-outlined text-sm"
+                data-icon="arrow_forward"
               >
-                Generate Today's Plan
-              </button>
-
-            </section>
-          )
-        }
+                arrow_forward
+              </span>
+            </button>
+          </div>
+        </section>
 
         {isGeneratingTasks && <TaskGenerationSkeleton />}
 
         {/* TASK LIST */}
 
-        {
-          hasSubmittedToday && (
-            <section className="space-y-6">
+        {hasSubmittedToday && (
+          <section className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-[#6152a8]">
+                Today's Focus !
+              </h2>
 
-              <div className="flex items-center justify-between">
+              
+            </div>
 
-                <h2 className="text-2xl font-bold text-gray-800">
-                  Today's Focus
-                </h2>
-
-                <button className="text-[#6152a8] font-semibold text-sm">
-                  View All
-                </button>
-
-              </div>
-
-              <div className="space-y-4">
-
-                {
-                  tasks.map((task) => (
-
-                    <TaskItem
-                      key={task._id}
-                      task={task}
-                      onToggle={() => toggleTask(task._id)}
-                    />
-                  ))
-                }
-
-              </div>
-
-            </section>
-          )
-        }
-
+            <div className="space-y-4">
+              {tasks.map((task) => (
+                <TaskItem
+                  key={task._id}
+                  task={task}
+                  onToggle={() => toggleTask(task._id)}
+                />
+              ))}
+            </div>
+          </section>
+        )}
       </main>
 
       {/* FAB */}
@@ -526,13 +507,10 @@ const Dashboard = () => {
         className="fixed bottom-28 right-6 w-14 h-14 bg-[#6152a8] text-white rounded-2xl shadow-xl flex items-center justify-center hover:scale-110 transition-all z-40"
         aria-label="Start focus session"
       >
-
         <Plus size={28} />
-
       </button>
 
       <NavBar />
-
     </div>
   );
 };
@@ -544,40 +522,27 @@ const Dashboard = () => {
 */
 
 const StatCard = ({ title, value, unit, icon, progress }) => (
-
   <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-50 flex flex-col justify-between">
-
     <div className="flex justify-between items-start">
-
       <span className="text-xs font-bold uppercase tracking-widest text-gray-400">
         {title}
       </span>
 
       {icon}
-
     </div>
 
     <div className="mt-4">
+      <span className="text-5xl font-black text-gray-800">{value}</span>
 
-      <span className="text-5xl font-black text-gray-800">
-        {value}
-      </span>
-
-      <span className="ml-2 text-gray-500">
-        {unit}
-      </span>
-
+      <span className="ml-2 text-gray-500">{unit}</span>
     </div>
 
     <div className="mt-6 h-2 w-full bg-gray-100 rounded-full overflow-hidden">
-
       <div
         className="h-full bg-orange-500 rounded-full"
         style={{ width: `${progress}%` }}
       />
-
     </div>
-
   </div>
 );
 
@@ -588,32 +553,23 @@ const StatCard = ({ title, value, unit, icon, progress }) => (
 */
 
 const GoalCard = ({ title, current, total, icon, color }) => (
-
   <div className="bg-white rounded-3xl p-6 border border-gray-50 shadow-sm">
-
-    <div className={`w-10 h-10 rounded-xl ${color} bg-opacity-10 flex items-center justify-center mb-4`}>
-
+    <div
+      className={`w-10 h-10 rounded-xl ${color} bg-opacity-10 flex items-center justify-center mb-4`}
+    >
       {React.cloneElement(icon, {
         size: 20,
-        className: color.replace("bg-", "text-")
+        className: color.replace("bg-", "text-"),
       })}
-
     </div>
 
-    <h3 className="text-gray-500 text-sm font-medium">
-      {title}
-    </h3>
+    <h3 className="text-gray-500 text-sm font-medium">{title}</h3>
 
     <p className="text-2xl font-bold">
-
       {current}
 
-      <span className="text-sm font-normal text-gray-400">
-        {" "} / {total}
-      </span>
-
+      <span className="text-sm font-normal text-violet-400"> / {total}</span>
     </p>
-
   </div>
 );
 
@@ -656,12 +612,9 @@ const TaskGenerationSkeleton = () => (
   </section>
 );
 
-
 //TASK ITEM
 
-
 const TaskItem = ({ task, onToggle }) => (
-
   <motion.div
     layout
     className={`p-5 rounded-2xl flex items-center justify-between transition-all ${
@@ -670,9 +623,7 @@ const TaskItem = ({ task, onToggle }) => (
         : "bg-white shadow-sm hover:shadow-md border border-gray-100"
     }`}
   >
-
     <div className="flex items-center gap-4">
-
       <button
         onClick={onToggle}
         className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-colors ${
@@ -681,40 +632,28 @@ const TaskItem = ({ task, onToggle }) => (
             : "border-gray-200 text-transparent"
         }`}
       >
-
         <Check size={16} strokeWidth={3} />
-
       </button>
 
       <div>
-
-        <h4 className={`font-bold ${
-          task.status === "completed"
-            ? "line-through text-gray-400"
-            : "text-gray-800"
-        }`}>
+        <h4
+          className={`font-bold ${
+            task.status === "completed"
+              ? "line-through text-gray-400"
+              : "text-gray-800"
+          }`}
+        >
           {task.title}
         </h4>
 
         <p className="text-xs text-gray-500">
-
           {task.estimatedMinutes} mins |{" "}
-
-          <span className="text-[#6152a8] font-semibold">
-            {task.taskType}
-          </span>
-
+          <span className="text-[#6152a8] font-semibold">{task.taskType}</span>
         </p>
-
       </div>
-
     </div>
 
-    <MoreVertical
-      size={20}
-      className="text-gray-400 cursor-pointer"
-    />
-
+    <MoreVertical size={20} className="text-gray-400 cursor-pointer" />
   </motion.div>
 );
 

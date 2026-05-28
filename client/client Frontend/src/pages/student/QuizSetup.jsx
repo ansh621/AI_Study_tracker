@@ -125,7 +125,7 @@ const QuizSetup = () => {
 
   return (
     <div className="min-h-screen bg-[#f8f9fc] pb-24 text-[#111827]">
-      <header className="mx-auto flex max-w-md items-center justify-between px-6 py-5">
+      <header className="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate("/dashboard")} className="grid h-10 w-10 place-items-center rounded-full bg-[#eef1f7] text-[#6152a8]">
             <ArrowLeft size={20} />
@@ -134,7 +134,7 @@ const QuizSetup = () => {
         </div>
       </header>
 
-      <main className="mx-auto max-w-md space-y-6 px-4">
+      <main className="mx-auto grid max-w-5xl gap-6 px-5 py-8 lg:grid-cols-[1fr_1.1fr]">
         {error && (
           <div className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
             {error}

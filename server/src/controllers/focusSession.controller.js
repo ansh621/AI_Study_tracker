@@ -4,7 +4,7 @@ const StudentSyllabus = require("../DB/Model/syllabus.model");
 const StudentInfo = require("../DB/Model/student.user");
 const User = require("../DB/Model/model.user");
 const { recordStudyActivity } = require("../middleware/activity.streak");
-const { notifyStudent } = require("../utils/notification.service");
+const { notifyStudent, notifyStudentAndParents } = require("../utils/notification.service");
 
 function cleanJson(text) {
   return text.replace(/```json/gi, "").replace(/```/g, "").trim();
@@ -138,7 +138,7 @@ async function getFocusSession(req, res) {
 
 async function endFocusSession(req, res) {
   try {
-    const { status = "completed" } = req.body;
+    const { status = "completed", actualElapsedSeconds } = req.body;
     const session = await FocusSession.findOne({
       _id: req.params.sessionId,
       userId: req.user.id,
@@ -151,15 +151,44 @@ async function endFocusSession(req, res) {
     if (session.status === "active") {
       session.status = status === "exited" ? "exited" : "completed";
       session.endedAt = new Date();
+      const plannedSeconds = Math.max(0, (Number(session.durationMinutes) || 0) * 60);
+      const fallbackElapsedSeconds = Math.max(
+        0,
+        Math.round((session.endedAt.getTime() - new Date(session.startedAt).getTime()) / 1000)
+      );
+      const reportedElapsedSeconds = Number(actualElapsedSeconds);
+      const elapsedSeconds = Number.isFinite(reportedElapsedSeconds)
+        ? Math.max(0, Math.round(reportedElapsedSeconds))
+        : fallbackElapsedSeconds;
+      const cappedElapsedSeconds = plannedSeconds
+        ? Math.min(elapsedSeconds, plannedSeconds)
+        : elapsedSeconds;
+
+      session.actualDurationSeconds = cappedElapsedSeconds;
+      session.actualDurationMinutes = Math.round((cappedElapsedSeconds / 60) * 10) / 10;
       await session.save();
-      await recordStudyActivity(req.user.id);
-      await notifyStudent(req.user.id, {
-        title: session.status === "completed" ? "Focus session completed" : "Focus session ended",
-        message: `${session.subjectName} - ${session.topicName}`,
-        type: "focus",
-        link: `/focus-session/${session._id}`,
-        uniqueKey: `focus-ended-${session._id}`,
-      });
+
+      if (session.status === "completed") {
+        await recordStudyActivity(req.user.id);
+        await notifyStudent(req.user.id, {
+          title: "Focus session completed",
+          message: `${session.subjectName} - ${session.topicName}. Time spent: ${session.actualDurationMinutes} min.`,
+          type: "focus",
+          link: `/focus-session/${session._id}`,
+          uniqueKey: `focus-ended-${session._id}`,
+        });
+      } else {
+        await notifyStudentAndParents(req.user.id, {
+          title: "Focus session left early",
+          message: `You left ${session.subjectName} - ${session.topicName} before completing it. Time spent: ${session.actualDurationMinutes} min.`,
+          parentTitle: "Focus session left early",
+          parentMessage: `Student left ${session.subjectName} - ${session.topicName} before completing the session. Time spent: ${session.actualDurationMinutes} min.`,
+          type: "focus",
+          link: "/dashboard",
+          parentLink: "/parentDash",
+          uniqueKey: `focus-exited-${session._id}`,
+        });
+      }
     }
 
     res.status(200).json({

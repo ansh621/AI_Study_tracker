@@ -37,8 +37,9 @@ const Login = () => {
         localStorage.setItem("Token", token); // Store the token in localStorage for future authenticated requests
         console.log("Login Success:", data);
        
+       
 
-        alert("Login successful! Redirecting to your dashboard...");
+        
         navigate("/Dashboard"); // Redirect to dashboard after successful login
       }
       if (response.ok && 
@@ -47,10 +48,10 @@ const Login = () => {
         localStorage.setItem("Token", token); // Store the token in localStorage for future authenticated requests
         console.log("Login Success: ", data.token);
 
-        alert("Login successful! Redirecting to your dashboard...");
+        
         navigate("/ParentDash"); // Redirect to dashboard after successful login
       } else {
-        alert(data.message || "Login failed. Check your credentials.");
+        console.log(data.message || "Login failed. Check your credentials.");
       }
     } catch (error) {
       console.error("Connection Error:", error);
@@ -76,13 +77,11 @@ const Login = () => {
       </header>
 
       <main className="flex-grow flex items-center justify-center p-4 md:p-12 relative overflow-hidden">
-        {/* Background Accents - Hidden on small screens for performance */}
-        <div className="hidden md:block absolute top-[-10%] right-[-5%] w-[40vw] h-[40vw] rounded-full bg-[#6152a8]/5 blur-[120px]"></div>
-
+        
         <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-12 items-center z-10">
           
-          {/* Left Column - Hidden on Mobile, Shown on LG */}
-          <div className="hidden lg:flex flex-col gap-10 pr-12">
+          
+          <div >
             <div className="space-y-6">
               <span className="text-[#31638a] font-semibold tracking-widest text-xs uppercase">Welcome Back</span>
               <h1 className="text-6xl font-bold text-[#2d3338] leading-[1.1]">
@@ -90,11 +89,7 @@ const Login = () => {
               </h1>
               <p className="text-[#5a6065] text-lg max-w-md">Step back into your weightless workspace.</p>
             </div>
-            <img 
-                src="https://images.pexels.com/photos/8386434/pexels-photo-8386434.jpeg" 
-                className="rounded-3xl shadow-2xl grayscale hover:grayscale-0 transition-all duration-700 h-80 object-cover" 
-                alt="study"
-            />
+            
           </div>
 
           {/* Right Column: Login Card - Mobile First (Full width on small, contained on large) */}

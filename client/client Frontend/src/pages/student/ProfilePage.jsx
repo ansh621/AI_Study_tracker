@@ -11,11 +11,14 @@ import {
   Users,
   User,
 } from "lucide-react";
-const FEMALE_DP_URL = "https://i.pinimg.com/1200x/52/ab/65/52ab657ec99f64c416b026a3bc8dc7df.jpg";
-const MALE_DP_URL = "https://i.pinimg.com/1200x/62/6d/72/626d72baaf98ece97098fbdcef8ece2b.jpg";
+const FEMALE_DP_URL =
+  "https://i.pinimg.com/1200x/52/ab/65/52ab657ec99f64c416b026a3bc8dc7df.jpg";
+const MALE_DP_URL =
+  "https://i.pinimg.com/1200x/62/6d/72/626d72baaf98ece97098fbdcef8ece2b.jpg";
 const ProfilePage = () => {
   const [profile, setProfile] = useState(null);
   const [editMode, setEditMode] = useState(false);
+  const [Level, setLevel] = useState("Beginner");
   const [form, setForm] = useState({
     name: "",
     age: "",
@@ -29,6 +32,7 @@ const ProfilePage = () => {
   const navigate = useNavigate();
 
   // 2. Correct Hook placement
+
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -53,6 +57,21 @@ const ProfilePage = () => {
             gender: result.data?.gender || "",
             subjectsCsv: (result.data?.subjects || []).join(", "),
           });
+          if (profile?.streak?.count < 10) {
+            setLevel("Beginner");
+          } else if (
+            profile?.streak?.count >= 10 &&
+            profile?.streak?.count < 30
+          ) {
+            setLevel("Intermediate");
+          } else if (
+            profile?.streak?.count >= 30 &&
+            profile?.streak?.count < 60
+          ) {
+            setLevel("Advanced");
+          } else if (profile?.streak?.count >= 60) {
+            setLevel("Expert");
+          } 
         } else {
           console.error("Auth Error:", result.message);
         }
@@ -72,7 +91,7 @@ const ProfilePage = () => {
     );
 
   return (
-    <div className="min-h-screen bg-[#f8f9fc] text-[#2d3338] font-sans">
+    <div className="min-h-screen bg-violet-100 text-[#2d3338] font-sans">
       <header className="fixed top-0 w-full bg-[#f8f9fc]/80 backdrop-blur-md px-6 py-4 flex justify-between items-center z-50">
         <div className="flex items-center gap-4">
           <button
@@ -116,54 +135,100 @@ const ProfilePage = () => {
             </div>
           </div>
           <div>
-            
             <h2 className="text-3xl font-extrabold tracking-tight">
               {profile?.name}
             </h2>
-            <p className="text-gray-500 font-medium mt-1">
-              Student 
-            </p>
+            <p className="text-violet-500 font-medium mt-1">  {Level} <i>Level</i></p>
           </div>
         </section>
         {editMode && (
           <section className="bg-white p-6 rounded-2xl border border-gray-100 space-y-3">
             <h3 className="text-lg font-bold">Edit Profile</h3>
-            <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Name" className="w-full rounded-xl border px-4 py-3" />
+            <input
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              placeholder="Name"
+              className="w-full rounded-xl border px-4 py-3"
+            />
             <div className="grid grid-cols-2 gap-3">
-              <input value={form.age} onChange={(e) => setForm({ ...form, age: e.target.value })} placeholder="Age" type="number" className="w-full rounded-xl border px-4 py-3" />
-              <input value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value })} placeholder="Gender" className="w-full rounded-xl border px-4 py-3" />
+              <input
+                value={form.age}
+                onChange={(e) => setForm({ ...form, age: e.target.value })}
+                placeholder="Age"
+                type="number"
+                className="w-full rounded-xl border px-4 py-3"
+              />
+              <input
+                value={form.gender}
+                onChange={(e) => setForm({ ...form, gender: e.target.value })}
+                placeholder="Gender"
+                className="w-full rounded-xl border px-4 py-3"
+              />
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <input value={form.grade} onChange={(e) => setForm({ ...form, grade: e.target.value })} placeholder="Grade" className="w-full rounded-xl border px-4 py-3" />
-              <input value={form.stream} onChange={(e) => setForm({ ...form, stream: e.target.value })} placeholder="Stream" className="w-full rounded-xl border px-4 py-3" />
+              <input
+                value={form.grade}
+                onChange={(e) => setForm({ ...form, grade: e.target.value })}
+                placeholder="Grade"
+                className="w-full rounded-xl border px-4 py-3"
+              />
+              <input
+                value={form.stream}
+                onChange={(e) => setForm({ ...form, stream: e.target.value })}
+                placeholder="Stream"
+                className="w-full rounded-xl border px-4 py-3"
+              />
             </div>
-            <input value={form.board} onChange={(e) => setForm({ ...form, board: e.target.value })} placeholder="Board" className="w-full rounded-xl border px-4 py-3" />
-            <textarea value={form.subjectsCsv} onChange={(e) => setForm({ ...form, subjectsCsv: e.target.value })} placeholder="Subjects comma-separated" className="w-full rounded-xl border px-4 py-3 h-24" />
+            <input
+              value={form.board}
+              onChange={(e) => setForm({ ...form, board: e.target.value })}
+              placeholder="Board"
+              className="w-full rounded-xl border px-4 py-3"
+            />
+            <textarea
+              value={form.subjectsCsv}
+              onChange={(e) =>
+                setForm({ ...form, subjectsCsv: e.target.value })
+              }
+              placeholder="Subjects comma-separated"
+              className="w-full rounded-xl border px-4 py-3 h-24"
+            />
             <button
               disabled={saving}
               onClick={async () => {
                 try {
                   setSaving(true);
                   const token = localStorage.getItem("Token");
-                  const response = await fetch("http://localhost:3000/api/student/profile", {
-                    method: "PUT",
-                    credentials: "include",
-                    headers: {
-                      "Content-Type": "application/json",
-                      ...(token && token !== "undefined" ? { Authorization: `Bearer ${token}` } : {}),
+                  const response = await fetch(
+                    "http://localhost:3000/api/student/profile",
+                    {
+                      method: "PUT",
+                      credentials: "include",
+                      headers: {
+                        "Content-Type": "application/json",
+                        ...(token && token !== "undefined"
+                          ? { Authorization: `Bearer ${token}` }
+                          : {}),
+                      },
+                      body: JSON.stringify({
+                        name: form.name,
+                        age: form.age,
+                        grade: form.grade,
+                        stream: form.stream,
+                        board: form.board,
+                        gender: form.gender,
+                        subjects: form.subjectsCsv
+                          .split(",")
+                          .map((item) => item.trim())
+                          .filter(Boolean),
+                      }),
                     },
-                    body: JSON.stringify({
-                      name: form.name,
-                      age: form.age,
-                      grade: form.grade,
-                      stream: form.stream,
-                      board: form.board,
-                      gender: form.gender,
-                      subjects: form.subjectsCsv.split(",").map((item) => item.trim()).filter(Boolean),
-                    }),
-                  });
+                  );
                   const result = await response.json();
-                  if (!response.ok) throw new Error(result.message || "Failed to update profile");
+                  if (!response.ok)
+                    throw new Error(
+                      result.message || "Failed to update profile",
+                    );
                   setProfile(result.data);
                   setEditMode(false);
                 } catch (error) {
@@ -180,7 +245,7 @@ const ProfilePage = () => {
         )}
 
         {/* Academic Identity */}
-        <section className="bg-gray-100/50 p-8 rounded-2xl flex items-center justify-between relative overflow-hidden">
+        <section className="bg-white p-8 rounded-2xl flex items-center justify-between relative overflow-hidden">
           <div className="z-10">
             <p className="text-xs font-bold text-indigo-600 tracking-widest uppercase mb-1">
               Academic Identity
@@ -193,7 +258,7 @@ const ProfilePage = () => {
             className="absolute -right-4 -bottom-4 opacity-5"
           />
         </section>
-        <section className="bg-gray-100/50 p-8 rounded-2xl flex items-center justify-between relative overflow-hidden">
+        <section className="bg-white p-8 rounded-2xl flex items-center justify-between relative overflow-hidden">
           <div className="z-10">
             <p className="text-xs font-bold text-indigo-600 tracking-widest uppercase mb-1">
               Personal Identity
@@ -204,7 +269,7 @@ const ProfilePage = () => {
           </div>
           <User size={120} className="absolute -right-4 -bottom-4 opacity-5" />
         </section>
-        <section className="bg-gray-100/50 p-8 rounded-2xl flex items-center justify-between relative overflow-hidden">
+        <section className="bg-white p-8 rounded-2xl flex items-center justify-between relative overflow-hidden">
           <div className="z-10">
             <p className="text-xs font-bold text-indigo-600 tracking-widest uppercase mb-1">
               Subjects

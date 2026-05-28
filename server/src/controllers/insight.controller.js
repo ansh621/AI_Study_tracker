@@ -19,7 +19,10 @@ function getDateRange(days = 7) {
 function buildStudyMetrics(tasks, sessions, quizzes) {
   const completedTasks = tasks.filter((task) => task.status === "completed").length;
   const completedSessions = sessions.filter((session) => session.status === "completed");
-  const totalFocusMinutes = sessions.reduce((sum, session) => sum + (session.durationMinutes || 0), 0);
+  const totalFocusMinutes = sessions.reduce(
+    (sum, session) => sum + (session.actualDurationMinutes || 0),
+    0
+  );
   const completionRate = tasks.length ? Math.round((completedTasks / tasks.length) * 100) : 0;
   const quizTotal = quizzes.reduce((sum, item) => sum + (item.maxMarks || 0), 0);
   const quizScore = quizzes.reduce((sum, item) => sum + (item.marksObtained || 0), 0);
